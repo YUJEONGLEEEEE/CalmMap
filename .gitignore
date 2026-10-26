@@ -1,0 +1,42 @@
+# ===== API keys / secrets (NEVER commit) =====
+Secrets.xcconfig
+*.secret
+.env
+.env.*
+!.env.example
+apikey.txt
+
+# ===== macOS =====
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# ===== Xcode =====
+build/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+*.xcscmblueprint
+*.xccheckout
+*.moved-aside
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+*.perspectivev3
+!default.perspectivev3
+
+# ===== Swift Package Manager =====
+.build/
+.swiftpm/
+Packages/
+Package.resolved
+
+# ===== CocoaPods / Carthage (if used) =====
+Pods/
+Carthage/Build/
+
+# ===== Cloudflare Worker =====
+worker/node_modules/
+worker/.wrangler/
+worker/.dev.vars
