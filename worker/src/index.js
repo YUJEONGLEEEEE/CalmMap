@@ -13,6 +13,17 @@ export default {
       return json({ ok: true });
     }
 
+    if (url.pathname === "/v1/admin/refresh") {
+      if (!env.ADMIN_TOKEN || request.headers.get("X-Admin-Token") !== env.ADMIN_TOKEN) {
+        return json({ error: "unauthorized" }, 401);
+      }
+      const chunk = Number(url.searchParams.get("chunk") ?? 0);
+      if (!Number.isInteger(chunk) || chunk < 0 || chunk >= CHUNK_COUNT) {
+        return json({ error: "invalid_chunk" }, 400);
+      }
+      return json(await refreshChunk(chunk, env));
+    }
+
     if (request.headers.get("X-App-Token") !== env.APP_TOKEN) {
       return json({ error: "unauthorized" }, 401);
     }
@@ -24,12 +35,6 @@ export default {
     const match = url.pathname.match(/^\/v1\/places\/(POI\d{3})$/);
     if (match) {
       return placeResponse(match[1], env, ctx);
-    }
-
-    if (url.pathname === "/v1/admin/refresh") {
-      const chunk = Number(url.searchParams.get("chunk") ?? 0);
-      const result = await refreshChunk(chunk, env);
-      return json(result);
     }
 
     return json({ error: "not_found" }, 404);
