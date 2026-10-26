@@ -1,8 +1,10 @@
 import MapKit
+import SwiftData
 import SwiftUI
 
 struct SensoryMapView: View {
     @State private var model = SensoryMapModel()
+    @Query(sort: \SoundMeasurement.measuredAt, order: .reverse) private var measurements: [SoundMeasurement]
     @State private var selected: SensoryMapModel.Entry?
     @State private var position: MapCameraPosition = .region(
         MKCoordinateRegion(
@@ -50,11 +52,17 @@ struct SensoryMapView: View {
                 }
             }
             .sheet(item: $selected) { entry in
-                PlaceDetailView(entry: entry)
+                PlaceDetailView(entry: entry) { date in
+                    model.measuredSound(for: entry.place.code, at: date)
+                }
                     .presentationDetents([.medium, .large])
             }
             .task {
+                model.apply(measurements: measurements)
                 await model.refresh()
+            }
+            .onChange(of: measurements.count) {
+                model.apply(measurements: measurements)
             }
         }
     }

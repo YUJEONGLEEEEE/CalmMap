@@ -1,0 +1,68 @@
+export const PRIVACY_HTML = `<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>무던한 지도 개인정보처리방침</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font-family: -apple-system, "Apple SD Gothic Neo", sans-serif; line-height: 1.7; max-width: 720px; margin: 0 auto; padding: 24px 16px 64px; background: #f6f4ee; color: #1d2733; }
+  @media (prefers-color-scheme: dark) { body { background: #12171d; color: #e4e8ee; } }
+  h1 { font-size: 1.6rem; }
+  h2 { font-size: 1.15rem; margin-top: 2rem; }
+  li { margin: 0.3rem 0; }
+  small { opacity: 0.7; }
+</style>
+</head>
+<body>
+<h1>무던한 지도 개인정보처리방침</h1>
+<p><small>시행일: 2026년 10월 27일</small></p>
+
+<p>무던한 지도(이하 "앱")는 발달장애 아동 가족이 장소와 시간대별 감각부하를 미리 확인할 수 있도록 돕는 서비스입니다. 앱은 개인을 식별할 수 있는 정보를 수집하지 않도록 설계되었습니다.</p>
+
+<h2>1. 수집하지 않는 정보</h2>
+<ul>
+  <li>회원가입과 로그인이 없으며 이름, 연락처, 이메일을 받지 않습니다.</li>
+  <li>아이의 진단명, 장애 정보, 나이를 묻지 않습니다.</li>
+  <li>녹음 파일을 만들거나 저장하거나 전송하지 않습니다.</li>
+</ul>
+
+<h2>2. 마이크 사용</h2>
+<ul>
+  <li>소리 측정을 시작한 동안에만 마이크를 사용합니다.</li>
+  <li>소리는 기기 안에서 Apple SoundAnalysis로 분석되며, 결과로 소리 종류(예: 말소리, 안내음, 교통 소리)의 비율과 상대적인 크기만 남깁니다.</li>
+  <li>원음과 대화 내용은 저장하거나 서버로 보내지 않습니다. 음성을 글자로 바꾸는 기능도 사용하지 않습니다.</li>
+</ul>
+
+<h2>3. 위치 사용</h2>
+<ul>
+  <li>측정 장소를 가까운 순서로 보여 주기 위해 앱을 사용하는 동안에만 위치를 사용합니다.</li>
+  <li>위치는 기기 안에서만 사용하며 서버로 보내거나 저장하지 않습니다.</li>
+  <li>위치 권한을 허용하지 않아도 장소를 직접 골라 모든 기능을 이용할 수 있습니다.</li>
+</ul>
+
+<h2>4. 기기에 저장되는 정보</h2>
+<ul>
+  <li>소리 측정 결과(장소, 시각, 소리 종류 비율, 상대 크기, 조명 체크), 방문 기록, 민감 요인 설정은 사용자의 기기에만 저장됩니다.</li>
+  <li>앱을 삭제하면 이 정보도 함께 삭제됩니다.</li>
+</ul>
+
+<h2>5. 서버와 외부 데이터</h2>
+<ul>
+  <li>앱은 서울특별시 실시간 도시데이터(장소별 혼잡도와 인구 예측)를 받아오기 위해 중계 서버(Cloudflare Workers)에 요청합니다. 이 요청에는 개인정보가 포함되지 않습니다.</li>
+  <li>중계 서버 운영 과정에서 Cloudflare가 기술적으로 접속 IP 등 통신 기록을 일시 처리할 수 있으며, 앱은 이를 별도로 저장하거나 분석하지 않습니다.</li>
+</ul>
+
+<h2>6. 제3자 제공</h2>
+<p>앱은 개인정보를 수집하지 않으므로 제3자에게 제공하지 않습니다.</p>
+
+<h2>7. 아동의 개인정보</h2>
+<p>앱은 보호자가 사용하는 것을 전제로 하며, 아동을 포함한 누구의 개인정보도 수집하지 않습니다.</p>
+
+<h2>8. 데이터 출처</h2>
+<p>서울특별시 실시간 도시데이터 (서울 열린데이터광장, 공공누리 제1유형). 감각부하 지수는 확률적 예측이며 판정이 아닙니다.</p>
+
+<h2>9. 문의</h2>
+<p>llyujay95@gmail.com</p>
+</body>
+</html>`;

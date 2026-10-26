@@ -101,14 +101,14 @@ struct HourlyReading: Identifiable, Hashable {
 }
 
 enum CalmWindowAdvisor {
-    static func hourly(place: Place, live: LivePlace, measuredSound: Double? = nil) -> [HourlyReading] {
+    static func hourly(place: Place, live: LivePlace, soundAt: (Date) -> Double? = { _ in nil }) -> [HourlyReading] {
         live.forecast.compactMap { point in
             guard let date = point.date else { return nil }
             let reading = SensoryIndex.reading(
                 place: place,
                 population: point.populationMid,
                 level: point.level,
-                measuredSound: measuredSound
+                measuredSound: soundAt(date)
             )
             return HourlyReading(date: date, reading: reading)
         }
