@@ -1,0 +1,13 @@
+name = "calmmap-proxy"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+
+[vars]
+SEOUL_FETCH_MODE = "fetch"
+
+[[kv_namespaces]]
+binding = "SNAPSHOT"
+id = "7b7b8d6ee6374a63ac0071dc9dc53f04"
+
+[triggers]
+crons = ["*/10 * * * *", "2-59/10 * * * *", "4-59/10 * * * *"]
