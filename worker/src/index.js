@@ -1,4 +1,5 @@
 import { PLACE_CODES } from "./places.js";
+import { PRIVACY_HTML } from "./privacy.js";
 import { buildPath, fetchSeoul, normalize } from "./seoul.js";
 
 const CRON_CHUNKS = ["*/10 * * * *", "2-59/10 * * * *", "4-59/10 * * * *"];
@@ -11,6 +12,12 @@ export default {
 
     if (url.pathname === "/health") {
       return json({ ok: true });
+    }
+
+    if (url.pathname === "/privacy") {
+      return new Response(PRIVACY_HTML, {
+        headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "public, max-age=3600" },
+      });
     }
 
     if (url.pathname === "/v1/admin/refresh") {
