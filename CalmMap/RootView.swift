@@ -3,7 +3,7 @@ import SwiftUI
 struct RootView: View {
     var body: some View {
         TabView {
-            PlaceListView()
+            SensoryMapView()
                 .tabItem { Label("지도", systemImage: "map") }
             Text("측정")
                 .tabItem { Label("측정", systemImage: "waveform") }

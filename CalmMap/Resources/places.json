@@ -4,846 +4,967 @@
     "name": "강남 MICE 관광특구",
     "category": "관광특구",
     "latitude": 37.510999,
-    "longitude": 127.060061
+    "longitude": 127.060061,
+    "areaSquareMeters": 190739
   },
   {
     "code": "POI002",
     "name": "동대문 관광특구",
     "category": "관광특구",
     "latitude": 37.567311,
-    "longitude": 127.011023
+    "longitude": 127.011023,
+    "areaSquareMeters": 611752
   },
   {
     "code": "POI003",
     "name": "명동 관광특구",
     "category": "관광특구",
     "latitude": 37.564149,
-    "longitude": 126.981851
+    "longitude": 126.981851,
+    "areaSquareMeters": 929897
   },
   {
     "code": "POI004",
     "name": "이태원 관광특구",
     "category": "관광특구",
     "latitude": 37.534439,
-    "longitude": 126.994377
+    "longitude": 126.994377,
+    "areaSquareMeters": 393343
   },
   {
     "code": "POI005",
     "name": "잠실 관광특구",
     "category": "관광특구",
     "latitude": 37.516479,
-    "longitude": 127.115274
+    "longitude": 127.115274,
+    "areaSquareMeters": 2338342
   },
   {
     "code": "POI006",
     "name": "종로·청계 관광특구",
     "category": "관광특구",
     "latitude": 37.570002,
-    "longitude": 126.99737
+    "longitude": 126.99737,
+    "areaSquareMeters": 636680
   },
   {
     "code": "POI007",
     "name": "홍대 관광특구",
     "category": "관광특구",
     "latitude": 37.553919,
-    "longitude": 126.921276
+    "longitude": 126.921276,
+    "areaSquareMeters": 1272502
   },
   {
     "code": "POI008",
     "name": "경복궁",
     "category": "고궁·문화유산",
     "latitude": 37.579876,
-    "longitude": 126.976764
+    "longitude": 126.976764,
+    "areaSquareMeters": 445751
   },
   {
     "code": "POI009",
     "name": "광화문·덕수궁",
     "category": "고궁·문화유산",
     "latitude": 37.570931,
-    "longitude": 126.977187
+    "longitude": 126.977187,
+    "areaSquareMeters": 788764
   },
   {
     "code": "POI010",
     "name": "보신각",
     "category": "고궁·문화유산",
     "latitude": 37.570586,
-    "longitude": 126.983415
+    "longitude": 126.983415,
+    "areaSquareMeters": 160427
   },
   {
     "code": "POI011",
     "name": "서울 암사동 유적",
     "category": "고궁·문화유산",
     "latitude": 37.560633,
-    "longitude": 127.130763
+    "longitude": 127.130763,
+    "areaSquareMeters": 117172
   },
   {
     "code": "POI012",
     "name": "창덕궁·종묘",
     "category": "고궁·문화유산",
     "latitude": 37.578695,
-    "longitude": 126.993351
+    "longitude": 126.993351,
+    "areaSquareMeters": 1108188
   },
   {
     "code": "POI013",
     "name": "가산디지털단지역",
     "category": "인구밀집지역",
     "latitude": 37.48089,
-    "longitude": 126.880107
+    "longitude": 126.880107,
+    "areaSquareMeters": 1168228
   },
   {
     "code": "POI014",
     "name": "강남역",
     "category": "인구밀집지역",
     "latitude": 37.498857,
-    "longitude": 127.028134
+    "longitude": 127.028134,
+    "areaSquareMeters": 635575
   },
   {
     "code": "POI015",
     "name": "건대입구역",
     "category": "인구밀집지역",
     "latitude": 37.53997,
-    "longitude": 127.068204
+    "longitude": 127.068204,
+    "areaSquareMeters": 385538
   },
   {
     "code": "POI016",
     "name": "고덕역",
     "category": "인구밀집지역",
     "latitude": 37.553455,
-    "longitude": 127.154871
+    "longitude": 127.154871,
+    "areaSquareMeters": 107543
   },
   {
     "code": "POI017",
     "name": "고속터미널역",
     "category": "인구밀집지역",
     "latitude": 37.504814,
-    "longitude": 127.005855
+    "longitude": 127.005855,
+    "areaSquareMeters": 244797
   },
   {
     "code": "POI018",
     "name": "교대역",
     "category": "인구밀집지역",
     "latitude": 37.492201,
-    "longitude": 127.013957
+    "longitude": 127.013957,
+    "areaSquareMeters": 214009
   },
   {
     "code": "POI019",
     "name": "구로디지털단지역",
     "category": "인구밀집지역",
     "latitude": 37.483878,
-    "longitude": 126.896183
+    "longitude": 126.896183,
+    "areaSquareMeters": 502808
   },
   {
     "code": "POI020",
     "name": "구로역",
     "category": "인구밀집지역",
     "latitude": 37.502348,
-    "longitude": 126.882117
+    "longitude": 126.882117,
+    "areaSquareMeters": 81343
   },
   {
     "code": "POI021",
     "name": "군자역",
     "category": "인구밀집지역",
     "latitude": 37.556316,
-    "longitude": 127.080194
+    "longitude": 127.080194,
+    "areaSquareMeters": 221401
   },
   {
     "code": "POI023",
     "name": "대림역",
     "category": "인구밀집지역",
     "latitude": 37.492667,
-    "longitude": 126.895541
+    "longitude": 126.895541,
+    "areaSquareMeters": 416024
   },
   {
     "code": "POI024",
     "name": "동대문역",
     "category": "인구밀집지역",
     "latitude": 37.571482,
-    "longitude": 127.009659
+    "longitude": 127.009659,
+    "areaSquareMeters": 197176
   },
   {
     "code": "POI025",
     "name": "뚝섬역",
     "category": "인구밀집지역",
     "latitude": 37.54829,
-    "longitude": 127.046136
+    "longitude": 127.046136,
+    "areaSquareMeters": 292225
   },
   {
     "code": "POI026",
     "name": "미아사거리역",
     "category": "인구밀집지역",
     "latitude": 37.612195,
-    "longitude": 127.030741
+    "longitude": 127.030741,
+    "areaSquareMeters": 324036
   },
   {
     "code": "POI027",
     "name": "발산역",
     "category": "인구밀집지역",
     "latitude": 37.559152,
-    "longitude": 126.839176
+    "longitude": 126.839176,
+    "areaSquareMeters": 388524
   },
   {
     "code": "POI029",
     "name": "사당역",
     "category": "인구밀집지역",
     "latitude": 37.47793,
-    "longitude": 126.981264
+    "longitude": 126.981264,
+    "areaSquareMeters": 347647
   },
   {
     "code": "POI030",
     "name": "삼각지역",
     "category": "인구밀집지역",
     "latitude": 37.535342,
-    "longitude": 126.973886
+    "longitude": 126.973886,
+    "areaSquareMeters": 62920
   },
   {
     "code": "POI031",
     "name": "서울대입구역",
     "category": "인구밀집지역",
     "latitude": 37.480612,
-    "longitude": 126.953061
+    "longitude": 126.953061,
+    "areaSquareMeters": 206782
   },
   {
     "code": "POI032",
     "name": "서울식물원·마곡나루역",
     "category": "인구밀집지역",
     "latitude": 37.567597,
-    "longitude": 126.831061
+    "longitude": 126.831061,
+    "areaSquareMeters": 591158
   },
   {
     "code": "POI033",
     "name": "서울역",
     "category": "인구밀집지역",
     "latitude": 37.556596,
-    "longitude": 126.973034
+    "longitude": 126.973034,
+    "areaSquareMeters": 376689
   },
   {
     "code": "POI034",
     "name": "선릉역",
     "category": "인구밀집지역",
     "latitude": 37.506054,
-    "longitude": 127.049808
+    "longitude": 127.049808,
+    "areaSquareMeters": 768554
   },
   {
     "code": "POI035",
     "name": "성신여대입구역",
     "category": "인구밀집지역",
     "latitude": 37.592389,
-    "longitude": 127.016853
+    "longitude": 127.016853,
+    "areaSquareMeters": 114252
   },
   {
     "code": "POI036",
     "name": "수유역",
     "category": "인구밀집지역",
     "latitude": 37.641484,
-    "longitude": 127.025695
+    "longitude": 127.025695,
+    "areaSquareMeters": 457812
   },
   {
     "code": "POI037",
     "name": "신논현역·논현역",
     "category": "인구밀집지역",
     "latitude": 37.50808,
-    "longitude": 127.023406
+    "longitude": 127.023406,
+    "areaSquareMeters": 195292
   },
   {
     "code": "POI038",
     "name": "신도림역",
     "category": "인구밀집지역",
     "latitude": 37.509098,
-    "longitude": 126.890201
+    "longitude": 126.890201,
+    "areaSquareMeters": 63111
   },
   {
     "code": "POI039",
     "name": "신림역",
     "category": "인구밀집지역",
     "latitude": 37.484676,
-    "longitude": 126.929334
+    "longitude": 126.929334,
+    "areaSquareMeters": 209479
   },
   {
     "code": "POI040",
     "name": "신촌·이대역",
     "category": "인구밀집지역",
     "latitude": 37.557035,
-    "longitude": 126.938969
+    "longitude": 126.938969,
+    "areaSquareMeters": 485710
   },
   {
     "code": "POI041",
     "name": "양재역",
     "category": "인구밀집지역",
     "latitude": 37.485339,
-    "longitude": 127.033969
+    "longitude": 127.033969,
+    "areaSquareMeters": 289213
   },
   {
     "code": "POI042",
     "name": "역삼역",
     "category": "인구밀집지역",
     "latitude": 37.500392,
-    "longitude": 127.038185
+    "longitude": 127.038185,
+    "areaSquareMeters": 418246
   },
   {
     "code": "POI043",
     "name": "연신내역",
     "category": "인구밀집지역",
     "latitude": 37.618661,
-    "longitude": 126.920732
+    "longitude": 126.920732,
+    "areaSquareMeters": 165403
   },
   {
     "code": "POI044",
     "name": "오목교역·목동운동장",
     "category": "인구밀집지역",
     "latitude": 37.528811,
-    "longitude": 126.876642
+    "longitude": 126.876642,
+    "areaSquareMeters": 1089418
   },
   {
     "code": "POI045",
     "name": "왕십리역",
     "category": "인구밀집지역",
     "latitude": 37.562216,
-    "longitude": 127.038901
+    "longitude": 127.038901,
+    "areaSquareMeters": 353421
   },
   {
     "code": "POI046",
     "name": "용산역",
     "category": "인구밀집지역",
     "latitude": 37.530256,
-    "longitude": 126.960823
+    "longitude": 126.960823,
+    "areaSquareMeters": 871193
   },
   {
     "code": "POI047",
     "name": "이태원역",
     "category": "인구밀집지역",
     "latitude": 37.534186,
-    "longitude": 126.993048
+    "longitude": 126.993048,
+    "areaSquareMeters": 114693
   },
   {
     "code": "POI048",
     "name": "장지역",
     "category": "인구밀집지역",
     "latitude": 37.47875,
-    "longitude": 127.123273
+    "longitude": 127.123273,
+    "areaSquareMeters": 335470
   },
   {
     "code": "POI049",
     "name": "장한평역",
     "category": "인구밀집지역",
     "latitude": 37.561804,
-    "longitude": 127.064785
+    "longitude": 127.064785,
+    "areaSquareMeters": 448740
   },
   {
     "code": "POI050",
     "name": "천호역",
     "category": "인구밀집지역",
     "latitude": 37.53924,
-    "longitude": 127.125015
+    "longitude": 127.125015,
+    "areaSquareMeters": 155128
   },
   {
     "code": "POI051",
     "name": "총신대입구(이수)역",
     "category": "인구밀집지역",
     "latitude": 37.486002,
-    "longitude": 126.981042
+    "longitude": 126.981042,
+    "areaSquareMeters": 249355
   },
   {
     "code": "POI052",
     "name": "충정로역",
     "category": "인구밀집지역",
     "latitude": 37.559696,
-    "longitude": 126.96369
+    "longitude": 126.96369,
+    "areaSquareMeters": 154638
   },
   {
     "code": "POI053",
     "name": "합정역",
     "category": "인구밀집지역",
     "latitude": 37.549376,
-    "longitude": 126.911733
+    "longitude": 126.911733,
+    "areaSquareMeters": 485647
   },
   {
     "code": "POI054",
     "name": "혜화역",
     "category": "인구밀집지역",
     "latitude": 37.582481,
-    "longitude": 127.001762
+    "longitude": 127.001762,
+    "areaSquareMeters": 212375
   },
   {
     "code": "POI055",
     "name": "홍대입구역(2호선)",
     "category": "인구밀집지역",
     "latitude": 37.55676,
-    "longitude": 126.922999
+    "longitude": 126.922999,
+    "areaSquareMeters": 112229
   },
   {
     "code": "POI056",
     "name": "회기역",
     "category": "인구밀집지역",
     "latitude": 37.590541,
-    "longitude": 127.056162
+    "longitude": 127.056162,
+    "areaSquareMeters": 297667
   },
   {
     "code": "POI058",
     "name": "가락시장",
     "category": "발달상권",
     "latitude": 37.493468,
-    "longitude": 127.111896
+    "longitude": 127.111896,
+    "areaSquareMeters": 625816
   },
   {
     "code": "POI059",
     "name": "가로수길",
     "category": "발달상권",
     "latitude": 37.521389,
-    "longitude": 127.023572
+    "longitude": 127.023572,
+    "areaSquareMeters": 654727
   },
   {
     "code": "POI060",
     "name": "광장(전통)시장",
     "category": "발달상권",
     "latitude": 37.570002,
-    "longitude": 126.999901
+    "longitude": 126.999901,
+    "areaSquareMeters": 63422
   },
   {
     "code": "POI061",
     "name": "김포공항",
     "category": "발달상권",
     "latitude": 37.562272,
-    "longitude": 126.8026
+    "longitude": 126.8026,
+    "areaSquareMeters": 900366
   },
   {
     "code": "POI063",
     "name": "노량진",
     "category": "발달상권",
     "latitude": 37.513894,
-    "longitude": 126.944055
+    "longitude": 126.944055,
+    "areaSquareMeters": 600376
   },
   {
     "code": "POI064",
     "name": "덕수궁길·정동길",
     "category": "발달상권",
     "latitude": 37.566349,
-    "longitude": 126.971779
+    "longitude": 126.971779,
+    "areaSquareMeters": 97832
   },
   {
     "code": "POI066",
     "name": "북촌한옥마을",
     "category": "발달상권",
     "latitude": 37.582236,
-    "longitude": 126.984001
+    "longitude": 126.984001,
+    "areaSquareMeters": 1127321
   },
   {
     "code": "POI067",
     "name": "서촌",
     "category": "발달상권",
     "latitude": 37.580368,
-    "longitude": 126.969575
+    "longitude": 126.969575,
+    "areaSquareMeters": 614501
   },
   {
     "code": "POI068",
     "name": "성수카페거리",
     "category": "발달상권",
     "latitude": 37.542966,
-    "longitude": 127.056596
+    "longitude": 127.056596,
+    "areaSquareMeters": 545928
   },
   {
     "code": "POI070",
     "name": "쌍문역",
     "category": "인구밀집지역",
     "latitude": 37.647656,
-    "longitude": 127.034032
+    "longitude": 127.034032,
+    "areaSquareMeters": 235236
   },
   {
     "code": "POI071",
     "name": "압구정로데오거리",
     "category": "발달상권",
     "latitude": 37.525495,
-    "longitude": 127.038734
+    "longitude": 127.038734,
+    "areaSquareMeters": 635661
   },
   {
     "code": "POI072",
     "name": "여의도",
     "category": "발달상권",
     "latitude": 37.525022,
-    "longitude": 126.925531
+    "longitude": 126.925531,
+    "areaSquareMeters": 4151702
   },
   {
     "code": "POI073",
     "name": "연남동",
     "category": "발달상권",
     "latitude": 37.561617,
-    "longitude": 126.922338
+    "longitude": 126.922338,
+    "areaSquareMeters": 390222
   },
   {
     "code": "POI074",
     "name": "영등포 타임스퀘어",
     "category": "발달상권",
     "latitude": 37.516863,
-    "longitude": 126.906151
+    "longitude": 126.906151,
+    "areaSquareMeters": 356776
   },
   {
     "code": "POI076",
     "name": "용리단길",
     "category": "발달상권",
     "latitude": 37.531186,
-    "longitude": 126.971295
+    "longitude": 126.971295,
+    "areaSquareMeters": 97964
   },
   {
     "code": "POI077",
     "name": "이태원 앤틱가구거리",
     "category": "발달상권",
     "latitude": 37.532228,
-    "longitude": 126.993907
+    "longitude": 126.993907,
+    "areaSquareMeters": 126088
   },
   {
     "code": "POI078",
     "name": "인사동",
     "category": "발달상권",
     "latitude": 37.573863,
-    "longitude": 126.986063
+    "longitude": 126.986063,
+    "areaSquareMeters": 341082
   },
   {
     "code": "POI079",
     "name": "창동 신경제 중심지",
     "category": "발달상권",
     "latitude": 37.656147,
-    "longitude": 127.054703
+    "longitude": 127.054703,
+    "areaSquareMeters": 1256871
   },
   {
     "code": "POI080",
     "name": "청담동 명품거리",
     "category": "발달상권",
     "latitude": 37.525832,
-    "longitude": 127.043767
+    "longitude": 127.043767,
+    "areaSquareMeters": 186096
   },
   {
     "code": "POI081",
     "name": "청량리 제기동 일대 전통시장",
     "category": "발달상권",
     "latitude": 37.580829,
-    "longitude": 127.03998
+    "longitude": 127.03998,
+    "areaSquareMeters": 406309
   },
   {
     "code": "POI082",
     "name": "해방촌·경리단길",
     "category": "발달상권",
     "latitude": 37.542371,
-    "longitude": 126.987185
+    "longitude": 126.987185,
+    "areaSquareMeters": 221320
   },
   {
     "code": "POI083",
     "name": "DDP(동대문디자인플라자)",
     "category": "발달상권",
     "latitude": 37.566988,
-    "longitude": 127.010289
+    "longitude": 127.010289,
+    "areaSquareMeters": 94628
   },
   {
     "code": "POI084",
     "name": "DMC(디지털미디어시티)",
     "category": "발달상권",
     "latitude": 37.579278,
-    "longitude": 126.891797
+    "longitude": 126.891797,
+    "areaSquareMeters": 999118
   },
   {
     "code": "POI085",
     "name": "강서한강공원",
     "category": "공원",
     "latitude": 37.586515,
-    "longitude": 126.81855
+    "longitude": 126.81855,
+    "areaSquareMeters": 298339
   },
   {
     "code": "POI086",
     "name": "고척돔",
     "category": "공원",
     "latitude": 37.497672,
-    "longitude": 126.867022
+    "longitude": 126.867022,
+    "areaSquareMeters": 101099
   },
   {
     "code": "POI087",
     "name": "광나루한강공원",
     "category": "공원",
     "latitude": 37.553987,
-    "longitude": 127.129819
+    "longitude": 127.129819,
+    "areaSquareMeters": 1242576
   },
   {
     "code": "POI088",
     "name": "광화문광장",
     "category": "공원",
     "latitude": 37.573409,
-    "longitude": 126.976921
+    "longitude": 126.976921,
+    "areaSquareMeters": 138913
   },
   {
     "code": "POI089",
     "name": "국립중앙박물관·용산가족공원",
     "category": "공원",
     "latitude": 37.522767,
-    "longitude": 126.981426
+    "longitude": 126.981426,
+    "areaSquareMeters": 360904
   },
   {
     "code": "POI090",
     "name": "난지한강공원",
     "category": "공원",
     "latitude": 37.566502,
-    "longitude": 126.877329
+    "longitude": 126.877329,
+    "areaSquareMeters": 686207
   },
   {
     "code": "POI091",
     "name": "남산공원",
     "category": "공원",
     "latitude": 37.551577,
-    "longitude": 126.993761
+    "longitude": 126.993761,
+    "areaSquareMeters": 3217039
   },
   {
     "code": "POI092",
     "name": "노들섬",
     "category": "공원",
     "latitude": 37.517556,
-    "longitude": 126.958657
+    "longitude": 126.958657,
+    "areaSquareMeters": 112438
   },
   {
     "code": "POI093",
     "name": "뚝섬한강공원",
     "category": "공원",
     "latitude": 37.529184,
-    "longitude": 127.071514
+    "longitude": 127.071514,
+    "areaSquareMeters": 456285
   },
   {
     "code": "POI094",
     "name": "망원한강공원",
     "category": "공원",
     "latitude": 37.553281,
-    "longitude": 126.899269
+    "longitude": 126.899269,
+    "areaSquareMeters": 424293
   },
   {
     "code": "POI095",
     "name": "반포한강공원",
     "category": "공원",
     "latitude": 37.509825,
-    "longitude": 126.994674
+    "longitude": 126.994674,
+    "areaSquareMeters": 610606
   },
   {
     "code": "POI096",
     "name": "북서울꿈의숲",
     "category": "공원",
     "latitude": 37.621852,
-    "longitude": 127.041116
+    "longitude": 127.041116,
+    "areaSquareMeters": 773864
   },
   {
     "code": "POI098",
     "name": "서리풀공원·몽마르뜨공원",
     "category": "공원",
     "latitude": 37.491583,
-    "longitude": 127.002682
+    "longitude": 127.002682,
+    "areaSquareMeters": 661897
   },
   {
     "code": "POI100",
     "name": "서울대공원",
     "category": "공원",
     "latitude": 37.429007,
-    "longitude": 127.017157
+    "longitude": 127.017157,
+    "areaSquareMeters": 2773105
   },
   {
     "code": "POI101",
     "name": "서울숲공원",
     "category": "공원",
     "latitude": 37.542963,
-    "longitude": 127.03765
+    "longitude": 127.03765,
+    "areaSquareMeters": 928525
   },
   {
     "code": "POI102",
     "name": "아차산",
     "category": "공원",
     "latitude": 37.566842,
-    "longitude": 127.102811
+    "longitude": 127.102811,
+    "areaSquareMeters": 5318224
   },
   {
     "code": "POI103",
     "name": "양화한강공원",
     "category": "공원",
     "latitude": 37.541305,
-    "longitude": 126.898185
+    "longitude": 126.898185,
+    "areaSquareMeters": 243537
   },
   {
     "code": "POI104",
     "name": "어린이대공원",
     "category": "공원",
     "latitude": 37.549061,
-    "longitude": 127.081358
+    "longitude": 127.081358,
+    "areaSquareMeters": 753600
   },
   {
     "code": "POI105",
     "name": "여의도한강공원",
     "category": "공원",
     "latitude": 37.528987,
-    "longitude": 126.928223
+    "longitude": 126.928223,
+    "areaSquareMeters": 656760
   },
   {
     "code": "POI106",
     "name": "월드컵공원",
     "category": "공원",
     "latitude": 37.570188,
-    "longitude": 126.884201
+    "longitude": 126.884201,
+    "areaSquareMeters": 2935073
   },
   {
     "code": "POI107",
     "name": "응봉산",
     "category": "공원",
     "latitude": 37.548215,
-    "longitude": 127.030467
+    "longitude": 127.030467,
+    "areaSquareMeters": 412544
   },
   {
     "code": "POI108",
     "name": "이촌한강공원",
     "category": "공원",
     "latitude": 37.519401,
-    "longitude": 126.96665
+    "longitude": 126.96665,
+    "areaSquareMeters": 484247
   },
   {
     "code": "POI109",
     "name": "잠실종합운동장",
     "category": "공원",
     "latitude": 37.514522,
-    "longitude": 127.073649
+    "longitude": 127.073649,
+    "areaSquareMeters": 452951
   },
   {
     "code": "POI110",
     "name": "잠실한강공원",
     "category": "공원",
     "latitude": 37.519234,
-    "longitude": 127.084297
+    "longitude": 127.084297,
+    "areaSquareMeters": 465185
   },
   {
     "code": "POI111",
     "name": "잠원한강공원",
     "category": "공원",
     "latitude": 37.52381,
-    "longitude": 127.014727
+    "longitude": 127.014727,
+    "areaSquareMeters": 304791
   },
   {
     "code": "POI112",
     "name": "청계산",
     "category": "공원",
     "latitude": 37.440739,
-    "longitude": 127.050018
+    "longitude": 127.050018,
+    "areaSquareMeters": 4773011
   },
   {
     "code": "POI114",
     "name": "북창동 먹자골목",
     "category": "발달상권",
     "latitude": 37.562263,
-    "longitude": 126.978496
+    "longitude": 126.978496,
+    "areaSquareMeters": 118821
   },
   {
     "code": "POI115",
     "name": "남대문시장",
     "category": "발달상권",
     "latitude": 37.559916,
-    "longitude": 126.97853
+    "longitude": 126.97853,
+    "areaSquareMeters": 115961
   },
   {
     "code": "POI116",
     "name": "익선동",
     "category": "발달상권",
     "latitude": 37.572661,
-    "longitude": 126.989628
+    "longitude": 126.989628,
+    "areaSquareMeters": 184293
   },
   {
     "code": "POI117",
     "name": "신정네거리역",
     "category": "인구밀집지역",
     "latitude": 37.521307,
-    "longitude": 126.855279
+    "longitude": 126.855279,
+    "areaSquareMeters": 154620
   },
   {
     "code": "POI118",
     "name": "잠실새내역",
     "category": "인구밀집지역",
     "latitude": 37.510413,
-    "longitude": 127.082656
+    "longitude": 127.082656,
+    "areaSquareMeters": 299987
   },
   {
     "code": "POI119",
     "name": "잠실역",
     "category": "인구밀집지역",
     "latitude": 37.511997,
-    "longitude": 127.100366
+    "longitude": 127.100366,
+    "areaSquareMeters": 258420
   },
   {
     "code": "POI120",
     "name": "잠실롯데타워·석촌호수",
     "category": "발달상권",
     "latitude": 37.511559,
-    "longitude": 127.103306
+    "longitude": 127.103306,
+    "areaSquareMeters": 872697
   },
   {
     "code": "POI121",
     "name": "송리단길·호수단길",
     "category": "발달상권",
     "latitude": 37.508047,
-    "longitude": 127.106315
+    "longitude": 127.106315,
+    "areaSquareMeters": 277868
   },
   {
     "code": "POI122",
     "name": "신촌 스타광장",
     "category": "발달상권",
     "latitude": 37.556509,
-    "longitude": 126.936931
+    "longitude": 126.936931,
+    "areaSquareMeters": 30503
   },
   {
     "code": "POI123",
     "name": "보라매공원",
     "category": "공원",
     "latitude": 37.492963,
-    "longitude": 126.920058
+    "longitude": 126.920058,
+    "areaSquareMeters": 297353
   },
   {
     "code": "POI124",
     "name": "서대문독립공원",
     "category": "공원",
     "latitude": 37.574091,
-    "longitude": 126.956605
+    "longitude": 126.956605,
+    "areaSquareMeters": 141140
   },
   {
     "code": "POI125",
     "name": "안양천",
     "category": "공원",
     "latitude": 37.518667,
-    "longitude": 126.879697
+    "longitude": 126.879697,
+    "areaSquareMeters": 368998
   },
   {
     "code": "POI126",
     "name": "여의서로",
     "category": "공원",
     "latitude": 37.532701,
-    "longitude": 126.914585
+    "longitude": 126.914585,
+    "areaSquareMeters": 417912
   },
   {
     "code": "POI127",
     "name": "올림픽공원",
     "category": "공원",
     "latitude": 37.519408,
-    "longitude": 127.122411
+    "longitude": 127.122411,
+    "areaSquareMeters": 1463588
   },
   {
     "code": "POI128",
     "name": "홍제폭포",
     "category": "공원",
     "latitude": 37.580779,
-    "longitude": 126.936953
+    "longitude": 126.936953,
+    "areaSquareMeters": 14546
   },
   {
     "code": "POI129",
     "name": "송현녹지광장",
     "category": "공원",
     "latitude": 37.577857,
-    "longitude": 126.983711
+    "longitude": 126.983711,
+    "areaSquareMeters": 295430
   },
   {
     "code": "POI130",
     "name": "시의회 앞",
     "category": "인구밀집지역",
     "latitude": 37.567068,
-    "longitude": 126.976938
+    "longitude": 126.976938,
+    "areaSquareMeters": 148810
   },
   {
     "code": "POI131",
     "name": "숭례문",
     "category": "인구밀집지역",
     "latitude": 37.560486,
-    "longitude": 126.97573
+    "longitude": 126.97573,
+    "areaSquareMeters": 142917
   }
 ]
