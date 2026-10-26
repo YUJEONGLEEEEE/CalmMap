@@ -3,10 +3,13 @@ import SwiftUI
 
 struct PlaceDetailView: View {
     let entry: SensoryMapModel.Entry
+    var soundAt: (Date) -> Double? = { _ in nil }
+    @Environment(AppRouter.self) private var router
+    @Environment(\.dismiss) private var dismiss
 
     private var hourly: [HourlyReading] {
         guard let live = entry.live else { return [] }
-        return CalmWindowAdvisor.hourly(place: entry.place, live: live)
+        return CalmWindowAdvisor.hourly(place: entry.place, live: live, soundAt: soundAt)
     }
 
     var body: some View {
@@ -18,6 +21,7 @@ struct PlaceDetailView: View {
                         adviceCard(reading: reading)
                         forecastChart
                         breakdown(reading: reading, live: live)
+                        measureButton
                     } else {
                         ContentUnavailableView(
                             "데이터를 불러오지 못했어요",
@@ -34,6 +38,19 @@ struct PlaceDetailView: View {
             .navigationTitle(entry.place.name)
             .navigationBarTitleDisplayMode(.inline)
         }
+    }
+
+    private var measureButton: some View {
+        Button {
+            dismiss()
+            router.measure(at: entry.place)
+        } label: {
+            Label("여기서 소리 측정하기", systemImage: "waveform")
+                .font(.headline)
+                .frame(maxWidth: .infinity, minHeight: 48)
+        }
+        .buttonStyle(.bordered)
+        .tint(Color.calmInk)
     }
 
     private func summary(reading: SensoryReading, live: LivePlace) -> some View {
