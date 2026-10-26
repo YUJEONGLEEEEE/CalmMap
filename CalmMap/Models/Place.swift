@@ -6,6 +6,7 @@ struct Place: Codable, Identifiable, Hashable {
     let category: String
     let latitude: Double
     let longitude: Double
+    let areaSquareMeters: Double
 
     var id: String { code }
     var coordinate: CLLocationCoordinate2D {
