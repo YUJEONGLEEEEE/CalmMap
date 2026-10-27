@@ -97,7 +97,7 @@ struct ChildHomeView: View {
                 .foregroundStyle(Color.calmInk)
             Text("아이에게 맞춘 지도")
                 .font(.title2.bold())
-            Text("아이마다 힘들어하는 것이 달라요. 사람 붐빔, 큰 소리, 안내음이나 사이렌 같은 소리 종류, 조명까지 알려 주면 지도와 시간 추천을 우리 아이 기준으로 다시 계산해요.")
+            Text("아이마다 힘들어하는 것이 달라요.\n사람 붐빔, 큰 소리, 안내음이나 사이렌 같은 사운드 종류, 조명까지 알려 주면 지도와 시간 추천을 우리 아이 기준으로 다시 계산해요.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
             VStack(alignment: .leading, spacing: 8) {

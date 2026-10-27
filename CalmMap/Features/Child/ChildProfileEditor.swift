@@ -108,15 +108,9 @@ struct ChildProfileEditor: View {
     }
 
     private func sensitivityPicker(_ title: String, systemImage: String, selection: Binding<Sensitivity>) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 14) {
             Label(title, systemImage: systemImage)
-            Picker(title, selection: selection) {
-                ForEach(Sensitivity.allCases) { level in
-                    Text(level.title).tag(level)
-                }
-            }
-            .pickerStyle(.segmented)
-            .labelsHidden()
+            StepSlider(title: title, options: Sensitivity.allCases, selection: selection) { $0.title }
         }
         .padding(.vertical, 4)
     }
