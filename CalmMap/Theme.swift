@@ -94,10 +94,19 @@ struct CalmPrimaryButtonStyle: ButtonStyle {
             .font(.headline)
             .foregroundStyle(Color.calmOnInk)
             .frame(maxWidth: .infinity, minHeight: 52)
-            .background(.ultraThinMaterial, in: Capsule())
-            .background(Color.calmInk.opacity(0.85), in: Capsule())
+            .background {
+                Capsule()
+                    .fill(Color.calmInk.opacity(0.94))
+                    .overlay(
+                        Capsule().fill(
+                            LinearGradient(colors: [.white.opacity(0.22), .clear], startPoint: .top, endPoint: .center)
+                        )
+                    )
+                    .background(.ultraThinMaterial, in: Capsule())
+            }
             .overlay(Capsule().strokeBorder(Color.calmGlassEdge, lineWidth: 1))
-            .opacity(isEnabled ? (configuration.isPressed ? 0.8 : 1) : 0.4)
+            .shadow(color: Color.calmInk.opacity(0.3), radius: 10, y: 4)
+            .opacity(isEnabled ? (configuration.isPressed ? 0.85 : 1) : 0.4)
     }
 }
 
