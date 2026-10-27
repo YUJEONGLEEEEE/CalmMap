@@ -48,8 +48,14 @@ final class SensoryMapModel {
         rebuild()
     }
 
-    func measuredSound(for placeCode: String, at date: Date) -> Double? {
-        MeasuredSound.score(for: placeCode, at: date, in: measurements)
+    func soundInput(for placeCode: String, at date: Date) -> SoundInput? {
+        if let measured = MeasuredSound.score(for: placeCode, at: date, in: measurements) {
+            return SoundInput(value: measured, source: .measured)
+        }
+        if let sensor = NoiseBaseline.shared?.decibels(for: placeCode, at: date) {
+            return .sensor(decibels: sensor.decibels, sensors: sensor.sensors)
+        }
+        return nil
     }
 
     private func rebuild() {
@@ -63,7 +69,7 @@ final class SensoryMapModel {
                 place: place,
                 population: live.populationMid,
                 level: live.level,
-                measuredSound: measuredSound(for: place.code, at: live.observedDate ?? now)
+                sound: soundInput(for: place.code, at: live.observedDate ?? now)
             )
             return Entry(place: place, live: live, reading: reading)
         }

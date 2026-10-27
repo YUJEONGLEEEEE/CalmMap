@@ -54,7 +54,7 @@ struct SensoryMapView: View {
             }
             .sheet(item: $selected) { entry in
                 PlaceDetailView(entry: entry) { date in
-                    model.measuredSound(for: entry.place.code, at: date)
+                    model.soundInput(for: entry.place.code, at: date)
                 }
                     .presentationDetents([.medium, .large])
             }
