@@ -5,6 +5,7 @@ import { buildPath, fetchSeoul, normalize } from "./seoul.js";
 const CRON_CHUNKS = ["*/10 * * * *", "2-59/10 * * * *", "4-59/10 * * * *"];
 const CHUNK_COUNT = CRON_CHUNKS.length;
 const PLACE_TTL_SECONDS = 300;
+const SUBREQUEST_LIMIT = 50;
 
 export default {
   async fetch(request, env, ctx) {
@@ -79,25 +80,51 @@ function chunkCodes(chunk) {
   return PLACE_CODES.slice(chunk * size, (chunk + 1) * size);
 }
 
+async function fetchPlace(code, env) {
+  return normalize(await fetchSeoul(buildPath(env.SEOUL_API_KEY, code), env.SEOUL_FETCH_MODE));
+}
+
 async function refreshChunk(chunk, env) {
   const codes = chunkCodes(chunk);
   const places = {};
-  const failures = [];
-  const results = await Promise.allSettled(
-    codes.map((code) => fetchSeoul(buildPath(env.SEOUL_API_KEY, code), env.SEOUL_FETCH_MODE).then(normalize))
-  );
+  const results = await Promise.allSettled(codes.map((code) => fetchPlace(code, env)));
+  const retry = [];
   results.forEach((result, index) => {
     if (result.status === "fulfilled") {
       places[codes[index]] = result.value;
     } else {
-      failures.push({ code: codes[index], reason: String(result.reason?.message || result.reason) });
+      retry.push(codes[index]);
     }
   });
-  const record = { updatedAt: new Date().toISOString(), places };
-  if (Object.keys(places).length > 0) {
+
+  const failures = [];
+  const retryBudget = Math.max(SUBREQUEST_LIMIT - codes.length - 1, 0);
+  for (const code of retry.slice(retryBudget)) {
+    failures.push({ code, reason: "retry_budget_exhausted" });
+  }
+  for (const code of retry.slice(0, retryBudget)) {
+    try {
+      places[code] = await fetchPlace(code, env);
+    } catch (error) {
+      failures.push({ code, reason: String(error?.message || error) });
+    }
+  }
+
+  const previous = await env.SNAPSHOT.get(`chunk:${chunk}`, "json");
+  let kept = 0;
+  for (const { code } of failures) {
+    if (previous?.places?.[code]) {
+      places[code] = previous.places[code];
+      kept += 1;
+    }
+  }
+
+  const fresh = codes.length - failures.length;
+  if (fresh > 0) {
+    const record = { updatedAt: new Date().toISOString(), places, failures };
     await env.SNAPSHOT.put(`chunk:${chunk}`, JSON.stringify(record));
   }
-  return { chunk, requested: codes.length, stored: Object.keys(places).length, failures };
+  return { chunk, requested: codes.length, fresh, retried: retry.length, kept, failures };
 }
 
 async function readSnapshot(env) {

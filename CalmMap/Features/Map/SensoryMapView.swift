@@ -4,6 +4,7 @@ import SwiftUI
 
 struct SensoryMapView: View {
     @State private var model = SensoryMapModel()
+    @Environment(ToastCenter.self) private var toasts
     @Query(sort: \SoundMeasurement.measuredAt, order: .reverse) private var measurements: [SoundMeasurement]
     @State private var selected: SensoryMapModel.Entry?
     @State private var position: MapCameraPosition = .region(
@@ -40,7 +41,7 @@ struct SensoryMapView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
-                        Task { await model.refresh() }
+                        Task { await refresh(announce: true) }
                     } label: {
                         if model.isLoading {
                             ProgressView()
@@ -59,7 +60,7 @@ struct SensoryMapView: View {
             }
             .task {
                 model.apply(measurements: measurements)
-                await model.refresh()
+                await refresh(announce: false)
             }
             .onChange(of: measurements.count) {
                 model.apply(measurements: measurements)
@@ -81,6 +82,17 @@ struct SensoryMapView: View {
         }
     }
 
+    private func refresh(announce: Bool) async {
+        let succeeded = await model.refresh()
+        if succeeded {
+            if announce, let updatedAt = model.updatedAt {
+                toasts.show("업데이트했어요 · \(updatedAt.formatted(date: .omitted, time: .shortened)) 기준", style: .success)
+            }
+        } else if let message = model.errorMessage {
+            toasts.show("\(message) 인터넷 연결을 확인하고 새로고침해 주세요.", style: .warning, duration: .seconds(4))
+        }
+    }
+
     private var header: some View {
         VStack(spacing: 6) {
             HStack(spacing: 14) {
@@ -92,11 +104,7 @@ struct SensoryMapView: View {
                     }
                 }
             }
-            if let message = model.errorMessage {
-                Text(message)
-                    .font(.caption)
-                    .foregroundStyle(.red)
-            } else if let updatedAt = model.updatedAt {
+            if let updatedAt = model.updatedAt {
                 Text("\(updatedAt.formatted(date: .omitted, time: .shortened)) 기준 · 서울시 실시간 도시데이터")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
@@ -112,4 +120,5 @@ struct SensoryMapView: View {
 
 #Preview {
     SensoryMapView()
+        .environment(ToastCenter())
 }

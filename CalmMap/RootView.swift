@@ -18,11 +18,13 @@ struct RootView: View {
                 .tag(AppRouter.Tab.child)
         }
         .tint(Color.calmInk)
+        .toastOverlay()
     }
 }
 
 #Preview {
     RootView()
         .environment(AppRouter())
+        .environment(ToastCenter())
         .modelContainer(for: SoundMeasurement.self, inMemory: true)
 }
