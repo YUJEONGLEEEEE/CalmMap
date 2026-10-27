@@ -3,7 +3,7 @@ import SwiftUI
 
 struct PlaceDetailView: View {
     let entry: SensoryMapModel.Entry
-    var soundAt: (Date) -> Double? = { _ in nil }
+    var soundAt: (Date) -> SoundInput? = { _ in nil }
     @Environment(AppRouter.self) private var router
     @Environment(\.dismiss) private var dismiss
 
@@ -29,7 +29,7 @@ struct PlaceDetailView: View {
                             description: Text("잠시 후 다시 시도해 주세요.")
                         )
                     }
-                    Text("출처: 서울특별시 실시간 도시데이터 (공공누리 제1유형). 지수는 확률적 예측이며 판정이 아닙니다.")
+                    Text("출처: 서울특별시 실시간 도시데이터, 스마트서울 도시데이터 센서(S-DoT) 환경정보 (공공누리 제1유형). 지수는 확률적 예측이며 판정이 아닙니다.")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                 }
@@ -115,10 +115,21 @@ struct PlaceDetailView: View {
             Text("이렇게 계산했어요")
                 .font(.headline)
             row(title: "사람 붐빔", value: reading.crowd, detail: "약 \(Int(live.populationMin).formatted())~\(Int(live.populationMax).formatted())명 · 평소 대비 \(live.level.rawValue)")
-            row(title: "소리", value: reading.sound, detail: reading.soundIsEstimated ? "장소 유형 기반 추정 (측정 전)" : "실측 반영")
+            row(title: "소리", value: reading.sound, detail: soundDetail(reading.soundSource))
             Text(live.message)
                 .font(.footnote)
                 .foregroundStyle(.secondary)
+        }
+    }
+
+    private func soundDetail(_ source: SoundSource) -> String {
+        switch source {
+        case .measured:
+            "현장 실측 반영"
+        case .sensor(let decibels, let sensors):
+            "서울시 소음 센서 \(sensors)대 · 평소 이 시간 약 \(Int(decibels.rounded()))dB"
+        case .estimate:
+            "장소 유형 기반 추정 (주변 센서·측정 없음)"
         }
     }
 

@@ -38,7 +38,7 @@ struct SensoryReading: Hashable {
     let score: Double
     let crowd: Double
     let sound: Double
-    let soundIsEstimated: Bool
+    let soundSource: SoundSource
 
     var tier: SensoryTier { SensoryTier(score: score) }
 }
@@ -79,16 +79,16 @@ enum SensoryIndex {
         place: Place,
         population: Double,
         level: CongestionLevel,
-        measuredSound: Double? = nil
+        sound input: SoundInput? = nil
     ) -> SensoryReading {
         let crowd = crowdScore(population: population, level: level, areaSquareMeters: place.areaSquareMeters)
-        let sound = measuredSound ?? estimatedSound(for: place.category)
+        let sound = input?.value ?? estimatedSound(for: place.category)
         let score = (crowdWeight * crowd + soundWeight * sound) * 100
         return SensoryReading(
             score: min(max(score, 0), 100),
             crowd: crowd,
             sound: sound,
-            soundIsEstimated: measuredSound == nil
+            soundSource: input?.source ?? .estimate
         )
     }
 }
@@ -101,14 +101,14 @@ struct HourlyReading: Identifiable, Hashable {
 }
 
 enum CalmWindowAdvisor {
-    static func hourly(place: Place, live: LivePlace, soundAt: (Date) -> Double? = { _ in nil }) -> [HourlyReading] {
+    static func hourly(place: Place, live: LivePlace, soundAt: (Date) -> SoundInput? = { _ in nil }) -> [HourlyReading] {
         live.forecast.compactMap { point in
             guard let date = point.date else { return nil }
             let reading = SensoryIndex.reading(
                 place: place,
                 population: point.populationMid,
                 level: point.level,
-                measuredSound: soundAt(date)
+                sound: soundAt(date)
             )
             return HourlyReading(date: date, reading: reading)
         }
