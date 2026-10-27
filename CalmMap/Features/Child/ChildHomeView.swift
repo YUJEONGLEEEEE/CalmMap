@@ -161,7 +161,7 @@ struct ChildHomeView: View {
     private func profileCard(_ child: ChildProfile) -> some View {
         let profile = child.sensoryProfile
         return VStack(alignment: .leading, spacing: 12) {
-            HStack {
+            HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(child.name)
                         .font(.title2.bold())
@@ -170,11 +170,17 @@ struct ChildHomeView: View {
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
-                Button("수정") {
+                Button {
                     editing = .edit(child)
+                } label: {
+                    Text("수정")
+                        .font(.caption)
+                        .foregroundStyle(Color.calmInk)
+                        .frame(minWidth: 44, minHeight: 44, alignment: .topTrailing)
+                        .contentShape(Rectangle())
                 }
-                .buttonStyle(.bordered)
-                .tint(Color.calmInk)
+                .buttonStyle(.plain)
+                .accessibilityLabel("\(child.name) 프로필 수정")
             }
             if profile.highlights.isEmpty {
                 Text("아직 예민한 항목을 고르지 않았어요. 수정에서 힘들어하는 것을 알려 주세요.")
