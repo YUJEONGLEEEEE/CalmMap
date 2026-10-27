@@ -9,6 +9,7 @@ struct SensoryMapView: View {
     @Query(sort: \SoundMeasurement.measuredAt, order: .reverse) private var measurements: [SoundMeasurement]
     @AppStorage("hasSeenMapIntro") private var hasSeenIntro = false
     @State private var selected: SensoryMapModel.Entry?
+    @State private var showingLoadError = false
     @State private var position: MapCameraPosition = .region(
         MKCoordinateRegion(
             center: CLLocationCoordinate2D(latitude: 37.5560, longitude: 126.9900),
@@ -69,6 +70,14 @@ struct SensoryMapView: View {
                         .accessibilityLabel("새로고침")
                     }
                 }
+            }
+            .alert("데이터를 불러오지 못했어요", isPresented: $showingLoadError) {
+                Button("닫기", role: .cancel) {}
+                Button("다시 시도") {
+                    Task { await refresh(announce: true) }
+                }
+            } message: {
+                Text("인터넷 연결을 확인하고 다시 시도해 주세요. 비행기 모드가 켜져 있다면 꺼 주세요.")
             }
             .sheet(item: $selected) { entry in
                 PlaceDetailView(placeCode: entry.place.code)
@@ -137,6 +146,9 @@ struct SensoryMapView: View {
                 withAnimation(.spring(duration: 0.4)) {
                     hasSeenIntro = true
                 }
+                if model.updatedAt == nil, !model.isLoading, model.errorMessage != nil {
+                    showingLoadError = true
+                }
             } label: {
                 Label("무던한 곳 보기", systemImage: "map")
             }
@@ -153,8 +165,8 @@ struct SensoryMapView: View {
             if announce, let updatedAt = model.updatedAt {
                 toasts.show("업데이트했어요 · \(updatedAt.formatted(date: .omitted, time: .shortened)) 기준", style: .success)
             }
-        } else if let message = model.errorMessage {
-            toasts.show("\(message) 인터넷 연결을 확인하고 새로고침해 주세요.", style: .warning, duration: .seconds(4))
+        } else if model.errorMessage != nil, hasSeenIntro {
+            showingLoadError = true
         }
     }
 
