@@ -184,7 +184,7 @@ struct ChildHomeView: View {
                 FlexibleChips(items: profile.highlights)
             }
             if !child.note.isEmpty {
-                Label(child.note, systemImage: "note.text")
+                Label(child.note, systemImage: "text.bubble")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
