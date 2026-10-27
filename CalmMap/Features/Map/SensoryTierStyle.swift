@@ -4,18 +4,14 @@ extension SensoryTier {
     var fill: Color {
         switch self {
         case .calm: Color.calmInk.opacity(0.18)
-        case .moderate: Color.calmInk.opacity(0.5)
-        case .intense: Color.calmInk.opacity(0.9)
+        case .moderate: Color.calmInk.opacity(0.55)
+        case .intense: Color.calmStrong.opacity(0.92)
         }
     }
 
     var foreground: Color {
-        self == .calm ? Color.calmInk : .white
+        self == .calm ? Color.calmInk : Color.calmOnInk
     }
-}
-
-extension Color {
-    static let calmInk = Color(red: 0.16, green: 0.29, blue: 0.43)
 }
 
 struct TierBadge: View {

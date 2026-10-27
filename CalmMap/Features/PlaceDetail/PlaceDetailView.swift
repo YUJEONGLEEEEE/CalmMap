@@ -2,25 +2,34 @@ import Charts
 import SwiftUI
 
 struct PlaceDetailView: View {
-    let entry: SensoryMapModel.Entry
-    var soundAt: (Date) -> SoundInput? = { _ in nil }
+    let placeCode: String
+    @Environment(SensoryMapModel.self) private var model
     @Environment(AppRouter.self) private var router
     @Environment(\.dismiss) private var dismiss
 
+    private var entry: SensoryMapModel.Entry? {
+        model.entry(for: placeCode)
+    }
+
     private var hourly: [HourlyReading] {
-        guard let live = entry.live else { return [] }
-        return CalmWindowAdvisor.hourly(place: entry.place, live: live, soundAt: soundAt)
+        entry.map { model.hourly(for: $0) } ?? []
     }
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
-                    if let reading = entry.reading, let live = entry.live {
+                    if let reading = entry?.reading, let live = entry?.live {
                         summary(reading: reading, live: live)
                         adviceCard(reading: reading)
+                        if !model.profile.isGeneral {
+                            personalCard(reading: reading)
+                                .calmCard()
+                        }
                         forecastChart
+                            .calmCard()
                         breakdown(reading: reading, live: live)
+                            .calmCard()
                         measureButton
                     } else {
                         ContentUnavailableView(
@@ -35,22 +44,21 @@ struct PlaceDetailView: View {
                 }
                 .padding()
             }
-            .navigationTitle(entry.place.name)
+            .background(CalmBackdrop())
+            .navigationTitle(entry?.place.name ?? "")
             .navigationBarTitleDisplayMode(.inline)
         }
     }
 
     private var measureButton: some View {
         Button {
+            guard let place = entry?.place else { return }
             dismiss()
-            router.measure(at: entry.place)
+            router.measure(at: place)
         } label: {
             Label("여기서 소리 측정하기", systemImage: "waveform")
-                .font(.headline)
-                .frame(maxWidth: .infinity, minHeight: 48)
         }
-        .buttonStyle(.bordered)
-        .tint(Color.calmInk)
+        .buttonStyle(.calmPrimary)
     }
 
     private func summary(reading: SensoryReading, live: LivePlace) -> some View {
@@ -59,11 +67,55 @@ struct PlaceDetailView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text("지금 \(reading.tier.title)")
                     .font(.title2.bold())
-                Text("감각부하 \(Int(reading.score.rounded())) / 100")
+                Text(scoreLine(reading))
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
             Spacer()
+        }
+    }
+
+    private func scoreLine(_ reading: SensoryReading) -> String {
+        let score = "감각부하 \(Int(reading.score.rounded())) / 100"
+        guard !model.profile.isGeneral else { return score }
+        return "\(model.profile.displayName) 기준 \(score)"
+    }
+
+    private func personalCard(reading: SensoryReading) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Label("\(model.profile.displayName)에게 맞춘 점수", systemImage: "figure.and.child.holdinghands")
+                    .font(.headline)
+                Spacer()
+            }
+            HStack(spacing: 8) {
+                Text("일반 \(Int(reading.baseScore.rounded()))")
+                    .foregroundStyle(.secondary)
+                Image(systemName: "arrow.right")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Text("\(model.profile.displayName) \(Int(reading.score.rounded()))")
+                    .fontWeight(.semibold)
+                    .foregroundStyle(Color.calmInk)
+                if reading.tier != reading.baseTier {
+                    Text("\(reading.baseTier.title) → \(reading.tier.title)")
+                        .font(.caption.weight(.medium))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .calmGlass(Capsule())
+                }
+            }
+            .font(.subheadline.monospacedDigit())
+            if reading.factors.isEmpty {
+                Text("\(model.profile.displayName.particle("이", "가")) 힘들어하는 요소가 크게 보이지 않는 곳이에요.")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            } else {
+                ForEach(reading.factors) { factor in
+                    Label(factor.text, systemImage: factor.symbolName)
+                        .font(.footnote)
+                }
+            }
         }
     }
 
@@ -73,10 +125,12 @@ struct PlaceDetailView: View {
                 .font(.headline)
         } icon: {
             Image(systemName: "clock")
+                .foregroundStyle(Color.calmInk)
         }
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.calmInk.opacity(0.08), in: RoundedRectangle(cornerRadius: 12))
+        .background(Color.calmTint, in: RoundedRectangle(cornerRadius: 20))
+        .calmGlass(RoundedRectangle(cornerRadius: 20))
     }
 
     private var forecastChart: some View {

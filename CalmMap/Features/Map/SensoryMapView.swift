@@ -3,7 +3,7 @@ import SwiftData
 import SwiftUI
 
 struct SensoryMapView: View {
-    @State private var model = SensoryMapModel()
+    @Environment(SensoryMapModel.self) private var model
     @Environment(ToastCenter.self) private var toasts
     @Query(sort: \SoundMeasurement.measuredAt, order: .reverse) private var measurements: [SoundMeasurement]
     @State private var selected: SensoryMapModel.Entry?
@@ -53,10 +53,9 @@ struct SensoryMapView: View {
                 }
             }
             .sheet(item: $selected) { entry in
-                PlaceDetailView(entry: entry) { date in
-                    model.soundInput(for: entry.place.code, at: date)
-                }
+                PlaceDetailView(placeCode: entry.place.code)
                     .presentationDetents([.medium, .large])
+                    .presentationBackground { CalmBackdrop() }
             }
             .task {
                 model.apply(measurements: measurements)
@@ -109,10 +108,15 @@ struct SensoryMapView: View {
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             }
+            if !model.profile.isGeneral {
+                Label("\(model.profile.displayName) 맞춤 지도", systemImage: "figure.and.child.holdinghands")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(Color.calmInk)
+            }
         }
         .padding(.vertical, 10)
         .padding(.horizontal, 14)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14))
+        .calmGlass(RoundedRectangle(cornerRadius: 18))
         .padding(.horizontal)
         .padding(.top, 4)
     }
@@ -121,4 +125,5 @@ struct SensoryMapView: View {
 #Preview {
     SensoryMapView()
         .environment(ToastCenter())
+        .environment(SensoryMapModel())
 }

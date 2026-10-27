@@ -48,16 +48,31 @@ final class SoundMeasurement {
 enum MeasuredSound {
     static let windowHours = 2
 
-    static func score(for placeCode: String, at date: Date, in measurements: [SoundMeasurement], calendar: Calendar = .seoul) -> Double? {
+    static func pool(for placeCode: String, at date: Date, in measurements: [SoundMeasurement], calendar: Calendar = .seoul) -> [SoundMeasurement] {
         let forPlace = measurements.filter { $0.placeCode == placeCode }
-        guard !forPlace.isEmpty else { return nil }
         let targetHour = calendar.component(.hour, from: date)
         let nearby = forPlace.filter {
             let hour = calendar.component(.hour, from: $0.measuredAt)
             let diff = abs(hour - targetHour)
             return min(diff, 24 - diff) <= windowHours
         }
-        let pool = nearby.isEmpty ? forPlace : nearby
+        return nearby.isEmpty ? forPlace : nearby
+    }
+
+    static func score(for placeCode: String, at date: Date, in measurements: [SoundMeasurement], calendar: Calendar = .seoul) -> Double? {
+        let pool = pool(for: placeCode, at: date, in: measurements, calendar: calendar)
+        guard !pool.isEmpty else { return nil }
         return pool.map(\.soundScore).reduce(0, +) / Double(pool.count)
+    }
+
+    static func ratios(of pool: [SoundMeasurement]) -> [SoundCategory: Double] {
+        guard !pool.isEmpty else { return [:] }
+        var total: [SoundCategory: Double] = [:]
+        for measurement in pool {
+            for (category, ratio) in measurement.ratios {
+                total[category, default: 0] += ratio
+            }
+        }
+        return total.mapValues { $0 / Double(pool.count) }
     }
 }
