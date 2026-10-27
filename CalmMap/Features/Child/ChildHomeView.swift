@@ -63,7 +63,7 @@ struct ChildHomeView: View {
                 .padding()
             }
             .background(CalmBackdrop())
-            .navigationTitle("우리 아이")
+            .navigationTitle("감각 맞춤 프로필")
             .toolbar {
                 if !children.isEmpty {
                     ToolbarItem(placement: .topBarTrailing) {

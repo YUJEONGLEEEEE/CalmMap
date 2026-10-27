@@ -21,7 +21,7 @@ struct RootView: View {
                 .tabItem { Label("측정", systemImage: "waveform") }
                 .tag(AppRouter.Tab.measure)
             ChildHomeView()
-                .tabItem { Label("우리 아이", image: router.selectedTab == .child ? "TabChildFill" : "TabChild") }
+                .tabItem { Label("프로필", image: router.selectedTab == .child ? "TabChildFill" : "TabChild") }
                 .tag(AppRouter.Tab.child)
         }
         .tint(Color.calmInk)
