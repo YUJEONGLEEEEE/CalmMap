@@ -27,16 +27,19 @@ final class SensoryMapModel {
         self.entries = places.map { Entry(place: $0, live: nil, reading: nil) }
     }
 
-    func refresh() async {
-        guard !isLoading else { return }
+    @discardableResult
+    func refresh() async -> Bool {
+        guard !isLoading else { return false }
         isLoading = true
         defer { isLoading = false }
         do {
             snapshot = try await client.fetchSnapshot()
             rebuild()
             errorMessage = nil
+            return true
         } catch {
             errorMessage = error.localizedDescription
+            return false
         }
     }
 

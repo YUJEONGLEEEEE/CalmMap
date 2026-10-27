@@ -25,6 +25,7 @@ struct CityDataClient {
         var request = URLRequest(url: url)
         request.setValue(AppConfig.appToken, forHTTPHeaderField: "X-App-Token")
         request.timeoutInterval = 15
+        request.cachePolicy = .reloadIgnoringLocalCacheData
         let (data, response) = try await session.data(for: request)
         if let http = response as? HTTPURLResponse, http.statusCode != 200 {
             throw CityDataError.badStatus(http.statusCode)

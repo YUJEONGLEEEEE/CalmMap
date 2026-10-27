@@ -3,6 +3,7 @@ import SwiftUI
 
 struct MeasureView: View {
     @Environment(AppRouter.self) private var router
+    @Environment(ToastCenter.self) private var toasts
     @Environment(\.modelContext) private var modelContext
     @Environment(\.openURL) private var openURL
     @State private var meter = SoundMeter()
@@ -11,7 +12,6 @@ struct MeasureView: View {
     @State private var showingPlacePicker = false
     @State private var brightLight = false
     @State private var flicker = false
-    @State private var savedMessage: String?
 
     private let places = Place.loadBundled()
 
@@ -49,6 +49,9 @@ struct MeasureView: View {
             }
             .onChange(of: router.measurePlace) {
                 adoptRouterPlace()
+            }
+            .onChange(of: meter.interruptionCount) {
+                toasts.show("다른 소리가 끼어들어 측정이 중단됐어요. 다시 시작해 주세요.", style: .warning, duration: .seconds(4))
             }
             .onChange(of: location.location) {
                 if place == nil {
@@ -91,15 +94,10 @@ struct MeasureView: View {
             if case .failed(let message) = meter.state {
                 Text(message).font(.footnote).foregroundStyle(.red)
             }
-            if let savedMessage {
-                Label(savedMessage, systemImage: "checkmark.circle")
-                    .font(.subheadline)
-            }
             Text("\(Int(SoundMeter.duration))초 동안 주변 소리의 종류와 크기를 살펴요. 폰을 손에 들고 평소처럼 서 있으면 돼요.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
             Button {
-                savedMessage = nil
                 Task { await meter.start() }
             } label: {
                 Label("측정 시작", systemImage: "waveform")
@@ -150,10 +148,17 @@ struct MeasureView: View {
                     FlowTags(categories: meter.recentCategories)
                 }
             }
-            Button("그만하기", role: .cancel) {
+            Button {
                 meter.cancel()
+                toasts.show("측정을 그만뒀어요.")
+            } label: {
+                Label("그만하기", systemImage: "stop.fill")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity, minHeight: 52)
             }
-            .buttonStyle(.bordered)
+            .buttonStyle(.borderedProminent)
+            .tint(Color.calmInk)
+            .padding(.top, 8)
         }
     }
 
@@ -208,7 +213,7 @@ struct MeasureView: View {
         )
         modelContext.insert(measurement)
         try? modelContext.save()
-        savedMessage = "\(place.name)에 저장했어요. 지도에 반영됐어요."
+        toasts.show("\(place.name)에 저장했어요. 지도에 반영됐어요.", style: .success)
         brightLight = false
         flicker = false
         meter.reset()

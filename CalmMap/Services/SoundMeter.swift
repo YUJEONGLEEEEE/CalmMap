@@ -28,6 +28,7 @@ final class SoundMeter {
     private(set) var currentDecibels: Double = -80
     private(set) var recentCategories: [SoundCategory] = []
     private(set) var summary: Summary?
+    private(set) var interruptionCount = 0
 
     private var engine: AVAudioEngine?
     private var analyzer: SNAudioStreamAnalyzer?
@@ -110,8 +111,10 @@ final class SoundMeter {
             forName: AVAudioSession.interruptionNotification,
             object: session,
             queue: .main
-        ) { [weak self] _ in
-            Task { @MainActor [weak self] in self?.finish() }
+        ) { [weak self] notification in
+            let raw = notification.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt
+            guard raw.flatMap(AVAudioSession.InterruptionType.init(rawValue:)) == .began else { return }
+            Task { @MainActor [weak self] in self?.interrupt() }
         }
 
         timer = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true) { [weak self] _ in
@@ -142,6 +145,15 @@ final class SoundMeter {
         guard state == .measuring else { return }
         currentDecibels = decibels
         decibelSamples.append(decibels)
+    }
+
+    private func interrupt() {
+        guard state == .measuring else { return }
+        stopEngine()
+        state = .idle
+        elapsed = 0
+        recentCategories = []
+        interruptionCount += 1
     }
 
     private func finish() {
