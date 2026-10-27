@@ -57,7 +57,7 @@ struct SensoryMapView: View {
                     model.soundInput(for: entry.place.code, at: date)
                 }
                     .presentationDetents([.medium, .large])
-                    .presentationBackground(Color.calmBackground)
+                    .presentationBackground { CalmBackdrop() }
             }
             .task {
                 model.apply(measurements: measurements)
@@ -113,7 +113,7 @@ struct SensoryMapView: View {
         }
         .padding(.vertical, 10)
         .padding(.horizontal, 14)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14))
+        .calmGlass(RoundedRectangle(cornerRadius: 18))
         .padding(.horizontal)
         .padding(.top, 4)
     }

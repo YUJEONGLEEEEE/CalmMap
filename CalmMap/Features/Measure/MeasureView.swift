@@ -36,7 +36,7 @@ struct MeasureView: View {
                 }
                 .padding()
             }
-            .background(Color.calmBackground)
+            .background(CalmBackdrop())
             .navigationTitle("소리 측정")
             .sheet(isPresented: $showingPlacePicker) {
                 PlacePickerView(places: places.sorted(near: location.location)) { picked in
@@ -68,7 +68,7 @@ struct MeasureView: View {
             .foregroundStyle(.secondary)
             .padding(12)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color.calmTint, in: RoundedRectangle(cornerRadius: 12))
+            .calmGlass(RoundedRectangle(cornerRadius: 16))
     }
 
     private var placeSelector: some View {
@@ -178,16 +178,10 @@ struct MeasureView: View {
             Toggle("조명이 많이 밝았어요", isOn: $brightLight)
             Toggle("깜빡이는 조명이 있었어요", isOn: $flicker)
             HStack {
-                Button {
+                Button("다시 측정") {
                     meter.reset()
-                } label: {
-                    Text("다시 측정")
-                        .font(.headline)
-                        .foregroundStyle(Color.calmInk)
-                        .frame(maxWidth: .infinity, minHeight: 52)
-                        .background(Color.calmTint, in: RoundedRectangle(cornerRadius: 16))
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.calmSecondary)
                 Button("저장하기") {
                     save(summary)
                 }
@@ -236,7 +230,7 @@ struct FlowTags: View {
                     .font(.footnote.weight(.medium))
                     .padding(.horizontal, 10)
                     .padding(.vertical, 6)
-                    .background(Color.calmInk.opacity(0.14), in: Capsule())
+                    .calmGlass(Capsule())
             }
         }
     }

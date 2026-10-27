@@ -37,7 +37,7 @@ struct PlaceDetailView: View {
                 }
                 .padding()
             }
-            .background(Color.calmBackground)
+            .background(CalmBackdrop())
             .navigationTitle(entry.place.name)
             .navigationBarTitleDisplayMode(.inline)
         }
@@ -77,7 +77,8 @@ struct PlaceDetailView: View {
         }
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.calmTint, in: RoundedRectangle(cornerRadius: 16))
+        .background(Color.calmTint, in: RoundedRectangle(cornerRadius: 20))
+        .calmGlass(RoundedRectangle(cornerRadius: 20))
     }
 
     private var forecastChart: some View {
