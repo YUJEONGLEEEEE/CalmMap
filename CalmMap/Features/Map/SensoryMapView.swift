@@ -57,6 +57,7 @@ struct SensoryMapView: View {
                     model.soundInput(for: entry.place.code, at: date)
                 }
                     .presentationDetents([.medium, .large])
+                    .presentationBackground(Color.calmBackground)
             }
             .task {
                 model.apply(measurements: measurements)

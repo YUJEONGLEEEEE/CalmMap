@@ -36,6 +36,7 @@ struct MeasureView: View {
                 }
                 .padding()
             }
+            .background(Color.calmBackground)
             .navigationTitle("소리 측정")
             .sheet(isPresented: $showingPlacePicker) {
                 PlacePickerView(places: places.sorted(near: location.location)) { picked in
@@ -67,7 +68,7 @@ struct MeasureView: View {
             .foregroundStyle(.secondary)
             .padding(12)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color.calmInk.opacity(0.06), in: RoundedRectangle(cornerRadius: 10))
+            .background(Color.calmTint, in: RoundedRectangle(cornerRadius: 12))
     }
 
     private var placeSelector: some View {
@@ -82,8 +83,7 @@ struct MeasureView: View {
                 Spacer()
                 Image(systemName: "chevron.right").foregroundStyle(.secondary)
             }
-            .padding()
-            .background(.background.secondary, in: RoundedRectangle(cornerRadius: 12))
+            .calmCard()
         }
         .buttonStyle(.plain)
         .disabled(meter.state == .measuring)
@@ -101,11 +101,8 @@ struct MeasureView: View {
                 Task { await meter.start() }
             } label: {
                 Label("측정 시작", systemImage: "waveform")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity, minHeight: 52)
             }
-            .buttonStyle(.borderedProminent)
-            .tint(Color.calmInk)
+            .buttonStyle(.calmPrimary)
             .disabled(place == nil)
         }
     }
@@ -127,20 +124,21 @@ struct MeasureView: View {
     }
 
     private var measuringSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack(alignment: .firstTextBaseline) {
-                Text("\(meter.remaining)")
-                    .font(.system(size: 56, weight: .bold, design: .rounded).monospacedDigit())
-                Text("초 남았어요").font(.headline)
+        VStack(spacing: 16) {
+            ZStack {
+                SoundBlob(level: SoundScore.loudness(averageDecibels: meter.currentDecibels))
+                VStack(spacing: 2) {
+                    Text("\(meter.remaining)")
+                        .font(.system(size: 56, weight: .semibold, design: .rounded).monospacedDigit())
+                        .contentTransition(.numericText())
+                    Text("초 남았어요").font(.subheadline).foregroundStyle(.secondary)
+                }
             }
+            .frame(height: 260)
+            .accessibilityElement(children: .combine)
             ProgressView(value: meter.progress)
                 .tint(Color.calmInk)
-            VStack(alignment: .leading, spacing: 6) {
-                Text("지금 소리 크기 (상대값)").font(.caption).foregroundStyle(.secondary)
-                ProgressView(value: SoundScore.loudness(averageDecibels: meter.currentDecibels))
-                    .tint(Color.calmInk.opacity(0.7))
-            }
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(spacing: 8) {
                 Text("들리는 소리").font(.caption).foregroundStyle(.secondary)
                 if meter.recentCategories.isEmpty {
                     Text("소리를 듣고 있어요…").font(.subheadline)
@@ -153,11 +151,8 @@ struct MeasureView: View {
                 toasts.show("측정을 그만뒀어요.")
             } label: {
                 Label("그만하기", systemImage: "stop.fill")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity, minHeight: 52)
             }
-            .buttonStyle(.borderedProminent)
-            .tint(Color.calmInk)
+            .buttonStyle(.calmPrimary)
             .padding(.top, 8)
         }
     }
@@ -183,19 +178,23 @@ struct MeasureView: View {
             Toggle("조명이 많이 밝았어요", isOn: $brightLight)
             Toggle("깜빡이는 조명이 있었어요", isOn: $flicker)
             HStack {
-                Button("다시 측정") {
-                    meter.reset()
-                }
-                .buttonStyle(.bordered)
                 Button {
-                    save(summary)
+                    meter.reset()
                 } label: {
-                    Text("저장하기").frame(maxWidth: .infinity, minHeight: 44)
+                    Text("다시 측정")
+                        .font(.headline)
+                        .foregroundStyle(Color.calmInk)
+                        .frame(maxWidth: .infinity, minHeight: 52)
+                        .background(Color.calmTint, in: RoundedRectangle(cornerRadius: 16))
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(Color.calmInk)
+                .buttonStyle(.plain)
+                Button("저장하기") {
+                    save(summary)
+                }
+                .buttonStyle(.calmPrimary)
             }
         }
+        .calmCard()
     }
 
     private func save(_ summary: SoundMeter.Summary) {
@@ -237,7 +236,7 @@ struct FlowTags: View {
                     .font(.footnote.weight(.medium))
                     .padding(.horizontal, 10)
                     .padding(.vertical, 6)
-                    .background(Color.calmInk.opacity(0.1), in: Capsule())
+                    .background(Color.calmInk.opacity(0.14), in: Capsule())
             }
         }
     }

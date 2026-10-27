@@ -53,7 +53,7 @@ struct ToastOverlay: ViewModifier {
             if let toast = toasts.current {
                 Label(toast.message, systemImage: toast.style.symbolName)
                     .font(.subheadline.weight(.medium))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Color.calmOnInk)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 12)
                     .background(Color.calmInk.opacity(0.95), in: Capsule())

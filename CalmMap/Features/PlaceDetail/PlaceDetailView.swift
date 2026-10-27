@@ -20,7 +20,9 @@ struct PlaceDetailView: View {
                         summary(reading: reading, live: live)
                         adviceCard(reading: reading)
                         forecastChart
+                            .calmCard()
                         breakdown(reading: reading, live: live)
+                            .calmCard()
                         measureButton
                     } else {
                         ContentUnavailableView(
@@ -35,6 +37,7 @@ struct PlaceDetailView: View {
                 }
                 .padding()
             }
+            .background(Color.calmBackground)
             .navigationTitle(entry.place.name)
             .navigationBarTitleDisplayMode(.inline)
         }
@@ -46,11 +49,8 @@ struct PlaceDetailView: View {
             router.measure(at: entry.place)
         } label: {
             Label("여기서 소리 측정하기", systemImage: "waveform")
-                .font(.headline)
-                .frame(maxWidth: .infinity, minHeight: 48)
         }
-        .buttonStyle(.bordered)
-        .tint(Color.calmInk)
+        .buttonStyle(.calmPrimary)
     }
 
     private func summary(reading: SensoryReading, live: LivePlace) -> some View {
@@ -73,10 +73,11 @@ struct PlaceDetailView: View {
                 .font(.headline)
         } icon: {
             Image(systemName: "clock")
+                .foregroundStyle(Color.calmInk)
         }
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.calmInk.opacity(0.08), in: RoundedRectangle(cornerRadius: 12))
+        .background(Color.calmTint, in: RoundedRectangle(cornerRadius: 16))
     }
 
     private var forecastChart: some View {
