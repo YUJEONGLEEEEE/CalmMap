@@ -26,6 +26,7 @@ struct RootView: View {
         }
         .tint(Color.calmInk)
         .toastOverlay()
+        .calmAlertOverlay()
         .onChange(of: activeProfile, initial: true) {
             model.apply(profile: activeProfile)
         }
@@ -36,6 +37,7 @@ struct RootView: View {
     RootView()
         .environment(AppRouter())
         .environment(ToastCenter())
+        .environment(AlertCenter())
         .environment(SensoryMapModel())
         .modelContainer(for: [SoundMeasurement.self, ChildProfile.self], inMemory: true)
 }

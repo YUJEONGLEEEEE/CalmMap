@@ -5,6 +5,7 @@ import SwiftUI
 struct SensoryMapView: View {
     @Environment(SensoryMapModel.self) private var model
     @Environment(ToastCenter.self) private var toasts
+    @Environment(AlertCenter.self) private var alerts
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Query(sort: \SoundMeasurement.measuredAt, order: .reverse) private var measurements: [SoundMeasurement]
     @AppStorage("hasSeenMapIntro") private var hasSeenIntro = false
@@ -137,6 +138,9 @@ struct SensoryMapView: View {
                 withAnimation(.spring(duration: 0.4)) {
                     hasSeenIntro = true
                 }
+                if model.updatedAt == nil, !model.isLoading, model.errorMessage != nil {
+                    presentLoadError()
+                }
             } label: {
                 Label("무던한 곳 보기", systemImage: "map")
             }
@@ -153,8 +157,20 @@ struct SensoryMapView: View {
             if announce, let updatedAt = model.updatedAt {
                 toasts.show("업데이트했어요 · \(updatedAt.formatted(date: .omitted, time: .shortened)) 기준", style: .success)
             }
-        } else if let message = model.errorMessage {
-            toasts.show("\(message) 인터넷 연결을 확인하고 새로고침해 주세요.", style: .warning, duration: .seconds(4))
+        } else if model.errorMessage != nil, hasSeenIntro {
+            presentLoadError()
+        }
+    }
+
+    private func presentLoadError() {
+        alerts.present(
+            systemImage: "wifi.exclamationmark",
+            title: "데이터를 불러오지 못했어요",
+            message: "인터넷 연결을 확인하고 다시 시도해 주세요. 비행기 모드가 켜져 있다면 꺼 주세요.",
+            cancelTitle: "닫기",
+            actionTitle: "다시 시도"
+        ) {
+            Task { await refresh(announce: true) }
         }
     }
 
@@ -203,5 +219,6 @@ struct SensoryMapView: View {
 #Preview {
     SensoryMapView()
         .environment(ToastCenter())
+        .environment(AlertCenter())
         .environment(SensoryMapModel())
 }

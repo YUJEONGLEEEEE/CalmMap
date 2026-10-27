@@ -1,9 +1,11 @@
+import AVFAudio
 import SwiftData
 import SwiftUI
 
 struct MeasureView: View {
     @Environment(AppRouter.self) private var router
     @Environment(ToastCenter.self) private var toasts
+    @Environment(AlertCenter.self) private var alerts
     @Environment(SensoryMapModel.self) private var model
     @Environment(\.modelContext) private var modelContext
     @Environment(\.openURL) private var openURL
@@ -23,10 +25,8 @@ struct MeasureView: View {
                     privacyNote
                     placeSelector
                     switch meter.state {
-                    case .idle, .failed:
+                    case .idle, .failed, .denied:
                         startSection
-                    case .denied:
-                        deniedSection
                     case .measuring:
                         measuringSection
                     case .finished:
@@ -99,7 +99,7 @@ struct MeasureView: View {
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
             Button {
-                Task { await meter.start() }
+                Task { await startMeasuring() }
             } label: {
                 Label("측정 시작", systemImage: "waveform")
             }
@@ -108,19 +108,24 @@ struct MeasureView: View {
         }
     }
 
-    private var deniedSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("마이크 권한이 필요해요")
-                .font(.headline)
-            Text("설정에서 마이크 접근을 허용하면 측정할 수 있어요. 소리는 기기 안에서만 분석해요.")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-            Button("설정 열기") {
+    private func startMeasuring() async {
+        let wasAsked = AVAudioApplication.shared.recordPermission != .undetermined
+        await meter.start()
+        guard meter.state == .denied else { return }
+        if wasAsked {
+            alerts.present(
+                systemImage: "mic.slash",
+                title: "마이크 권한이 필요해요",
+                message: "설정에서 마이크 접근을 허용하면 측정할 수 있어요. 소리는 기기 안에서만 분석해요.",
+                cancelTitle: "취소",
+                actionTitle: "설정 열기"
+            ) {
                 if let url = URL(string: UIApplication.openSettingsURLString) {
                     openURL(url)
                 }
             }
-            .buttonStyle(.bordered)
+        } else {
+            toasts.show("마이크 권한이 없어서 측정을 시작하지 않았어요.")
         }
     }
 
