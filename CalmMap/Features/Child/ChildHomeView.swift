@@ -109,7 +109,7 @@ struct ChildHomeView: View {
             Button {
                 editing = .new
             } label: {
-                Label("아이 프로필 만들기", systemImage: "plus")
+                Label("프로필 만들기", systemImage: "plus")
             }
             .buttonStyle(.calmPrimary)
             .padding(.top, 4)
