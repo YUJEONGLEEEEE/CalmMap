@@ -4,6 +4,7 @@ import SwiftUI
 struct MeasureView: View {
     @Environment(AppRouter.self) private var router
     @Environment(ToastCenter.self) private var toasts
+    @Environment(SensoryMapModel.self) private var model
     @Environment(\.modelContext) private var modelContext
     @Environment(\.openURL) private var openURL
     @State private var meter = SoundMeter()
@@ -165,6 +166,14 @@ struct MeasureView: View {
             ForEach(summary.ratios.sorted { $0.value > $1.value }, id: \.key) { category, ratio in
                 HStack {
                     Label(category.title, systemImage: category.symbolName)
+                    if model.profile.trigger(category) != .fine {
+                        Text("\(model.profile.displayName) \(model.profile.trigger(category).shortTitle) 힘들어함")
+                            .font(.caption2.weight(.semibold))
+                            .foregroundStyle(Color.calmOnInk)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Color.calmInk.opacity(0.85), in: Capsule())
+                    }
                     Spacer()
                     Text("\(Int((ratio * 100).rounded()))%").monospacedDigit()
                 }

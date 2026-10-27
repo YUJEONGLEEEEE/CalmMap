@@ -15,6 +15,7 @@ final class SensoryMapModel {
     private(set) var updatedAt: Date?
     private(set) var isLoading = false
     private(set) var errorMessage: String?
+    private(set) var profile: SensoryProfile = .general
 
     private let places: [Place]
     private let client: CityDataClient
@@ -48,14 +49,39 @@ final class SensoryMapModel {
         rebuild()
     }
 
-    func soundInput(for placeCode: String, at date: Date) -> SoundInput? {
-        if let measured = MeasuredSound.score(for: placeCode, at: date, in: measurements) {
-            return SoundInput(value: measured, source: .measured)
+    func apply(profile: SensoryProfile) {
+        guard profile != self.profile else { return }
+        self.profile = profile
+        rebuild()
+    }
+
+    func soundContext(for place: Place, at date: Date) -> SoundContext {
+        var context = SoundContext.expected(for: place)
+        let pool = MeasuredSound.pool(for: place.code, at: date, in: measurements)
+        if let measured = MeasuredSound.score(for: place.code, at: date, in: measurements) {
+            context.input = SoundInput(value: measured, source: .measured)
+            let ratios = MeasuredSound.ratios(of: pool)
+            if !ratios.isEmpty {
+                context.ratios = ratios
+                context.ratiosMeasured = true
+            }
+            context.brightLight = pool.contains { $0.brightLight }
+            context.flicker = pool.contains { $0.flicker }
+        } else if let sensor = NoiseBaseline.shared?.decibels(for: place.code, at: date) {
+            context.input = .sensor(decibels: sensor.decibels, sensors: sensor.sensors)
         }
-        if let sensor = NoiseBaseline.shared?.decibels(for: placeCode, at: date) {
-            return .sensor(decibels: sensor.decibels, sensors: sensor.sensors)
+        return context
+    }
+
+    func hourly(for entry: Entry) -> [HourlyReading] {
+        guard let live = entry.live else { return [] }
+        return CalmWindowAdvisor.hourly(place: entry.place, live: live, profile: profile) { date in
+            soundContext(for: entry.place, at: date)
         }
-        return nil
+    }
+
+    func entry(for placeCode: String) -> Entry? {
+        entries.first { $0.place.code == placeCode }
     }
 
     private func rebuild() {
@@ -69,7 +95,8 @@ final class SensoryMapModel {
                 place: place,
                 population: live.populationMid,
                 level: live.level,
-                sound: soundInput(for: place.code, at: live.observedDate ?? now)
+                context: soundContext(for: place, at: live.observedDate ?? now),
+                profile: profile
             )
             return Entry(place: place, live: live, reading: reading)
         }

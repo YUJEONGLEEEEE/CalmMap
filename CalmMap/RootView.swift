@@ -3,6 +3,13 @@ import SwiftUI
 
 struct RootView: View {
     @Environment(AppRouter.self) private var router
+    @Environment(SensoryMapModel.self) private var model
+    @Query(sort: \ChildProfile.createdAt) private var children: [ChildProfile]
+    @AppStorage(ChildProfile.activeKey) private var activeChildID = ""
+
+    private var activeProfile: SensoryProfile {
+        children.first { $0.id.uuidString == activeChildID }?.sensoryProfile ?? .general
+    }
 
     var body: some View {
         @Bindable var router = router
@@ -13,12 +20,15 @@ struct RootView: View {
             MeasureView()
                 .tabItem { Label("측정", systemImage: "waveform") }
                 .tag(AppRouter.Tab.measure)
-            Text("우리 아이")
-                .tabItem { Label("우리 아이", systemImage: "person.crop.circle") }
+            ChildHomeView()
+                .tabItem { Label("우리 아이", systemImage: "figure.and.child.holdinghands") }
                 .tag(AppRouter.Tab.child)
         }
         .tint(Color.calmInk)
         .toastOverlay()
+        .onChange(of: activeProfile, initial: true) {
+            model.apply(profile: activeProfile)
+        }
     }
 }
 
@@ -26,5 +36,6 @@ struct RootView: View {
     RootView()
         .environment(AppRouter())
         .environment(ToastCenter())
-        .modelContainer(for: SoundMeasurement.self, inMemory: true)
+        .environment(SensoryMapModel())
+        .modelContainer(for: [SoundMeasurement.self, ChildProfile.self], inMemory: true)
 }

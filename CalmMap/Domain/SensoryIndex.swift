@@ -39,8 +39,11 @@ struct SensoryReading: Hashable {
     let crowd: Double
     let sound: Double
     let soundSource: SoundSource
+    var baseScore: Double
+    var factors: [PersonalFactor] = []
 
     var tier: SensoryTier { SensoryTier(score: score) }
+    var baseTier: SensoryTier { SensoryTier(score: baseScore) }
 }
 
 enum SensoryIndex {
@@ -79,17 +82,27 @@ enum SensoryIndex {
         place: Place,
         population: Double,
         level: CongestionLevel,
-        sound input: SoundInput? = nil
+        context: SoundContext? = nil,
+        profile: SensoryProfile = .general
     ) -> SensoryReading {
+        let context = context ?? .expected(for: place)
         let crowd = crowdScore(population: population, level: level, areaSquareMeters: place.areaSquareMeters)
-        let sound = input?.value ?? estimatedSound(for: place.category)
-        let score = (crowdWeight * crowd + soundWeight * sound) * 100
+        let sound = context.input?.value ?? estimatedSound(for: place.category)
+        let baseScore = clamp((crowdWeight * crowd + soundWeight * sound) * 100)
+        let personal = PersonalAdjuster.adjust(crowd: crowd, sound: sound, context: context, profile: profile)
+        let score = clamp((crowdWeight * personal.crowd + soundWeight * personal.sound) * 100 + personal.penalty)
         return SensoryReading(
-            score: min(max(score, 0), 100),
-            crowd: crowd,
-            sound: sound,
-            soundSource: input?.source ?? .estimate
+            score: score,
+            crowd: personal.crowd,
+            sound: personal.sound,
+            soundSource: context.input?.source ?? .estimate,
+            baseScore: baseScore,
+            factors: personal.factors
         )
+    }
+
+    private static func clamp(_ score: Double) -> Double {
+        min(max(score, 0), 100)
     }
 }
 
@@ -101,14 +114,20 @@ struct HourlyReading: Identifiable, Hashable {
 }
 
 enum CalmWindowAdvisor {
-    static func hourly(place: Place, live: LivePlace, soundAt: (Date) -> SoundInput? = { _ in nil }) -> [HourlyReading] {
+    static func hourly(
+        place: Place,
+        live: LivePlace,
+        profile: SensoryProfile = .general,
+        contextAt: (Date) -> SoundContext? = { _ in nil }
+    ) -> [HourlyReading] {
         live.forecast.compactMap { point in
             guard let date = point.date else { return nil }
             let reading = SensoryIndex.reading(
                 place: place,
                 population: point.populationMid,
                 level: point.level,
-                sound: soundAt(date)
+                context: contextAt(date),
+                profile: profile
             )
             return HourlyReading(date: date, reading: reading)
         }
