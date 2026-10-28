@@ -12,6 +12,7 @@ final class SensoryMapModel {
     }
 
     private(set) var entries: [Entry] = []
+    private(set) var spots: [MeasuredSpot] = []
     private(set) var updatedAt: Date?
     private(set) var isLoading = false
     private(set) var errorMessage: String?
@@ -46,7 +47,12 @@ final class SensoryMapModel {
 
     func apply(measurements: [SoundMeasurement]) {
         self.measurements = measurements
+        spots = MeasuredSpot.group(measurements)
         rebuild()
+    }
+
+    func spot(id: UUID) -> MeasuredSpot? {
+        spots.first { $0.id == id }
     }
 
     func apply(profile: SensoryProfile) {

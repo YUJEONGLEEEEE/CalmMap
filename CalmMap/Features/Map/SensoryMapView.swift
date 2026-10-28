@@ -10,6 +10,7 @@ struct SensoryMapView: View {
     @Query(sort: \SoundMeasurement.measuredAt, order: .reverse) private var measurements: [SoundMeasurement]
     @AppStorage("hasSeenMapIntro") private var hasSeenIntro = false
     @State private var selected: SensoryMapModel.Entry?
+    @State private var selectedSpot: MeasuredSpot?
     @State private var position: MapCameraPosition = .region(
         MKCoordinateRegion(
             center: CLLocationCoordinate2D(latitude: 37.5560, longitude: 126.9900),
@@ -27,6 +28,18 @@ struct SensoryMapView: View {
                                 selected = entry
                             } label: {
                                 marker(for: entry)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                        .annotationTitles(.hidden)
+                    }
+                    ForEach(model.spots) { spot in
+                        Annotation("내가 측정한 곳", coordinate: spot.coordinate, anchor: .center) {
+                            Button {
+                                selectedSpot = spot
+                            } label: {
+                                MeasuredSpotPin(tier: spot.tier)
+                                    .shadow(color: .black.opacity(0.18), radius: 3, y: 1)
                             }
                             .buttonStyle(.plain)
                         }
@@ -73,6 +86,11 @@ struct SensoryMapView: View {
             }
             .sheet(item: $selected) { entry in
                 PlaceDetailView(placeCode: entry.place.code)
+                    .presentationDetents([.medium, .large])
+                    .presentationBackground { CalmBackdrop() }
+            }
+            .sheet(item: $selectedSpot) { spot in
+                MeasuredSpotView(spotID: spot.id)
                     .presentationDetents([.medium, .large])
                     .presentationBackground { CalmBackdrop() }
             }
@@ -177,11 +195,18 @@ struct SensoryMapView: View {
     private var header: some View {
         VStack(spacing: 6) {
             if let updatedAt = model.updatedAt {
-                HStack(spacing: 14) {
+                HStack(spacing: model.spots.isEmpty ? 14 : 10) {
                     ForEach(SensoryTier.allCases, id: \.self) { tier in
                         HStack(spacing: 6) {
                             TierBadge(tier: tier, size: 20)
                             Text("\(tier.title) \(model.count(of: tier))")
+                                .font(.footnote.weight(.medium))
+                        }
+                    }
+                    if !model.spots.isEmpty {
+                        HStack(spacing: 6) {
+                            MeasuredSpotPin(tier: .calm, size: 20)
+                            Text("내 측정 \(model.spots.count)")
                                 .font(.footnote.weight(.medium))
                         }
                     }
