@@ -43,12 +43,30 @@ final class LocationProvider: NSObject, CLLocationManagerDelegate {
     nonisolated func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {}
 }
 
+extension Place {
+    static let nearbyRadius: CLLocationDistance = 500
+
+    func distance(from location: CLLocation) -> CLLocationDistance {
+        location.distance(from: CLLocation(latitude: latitude, longitude: longitude))
+    }
+
+    func isNearby(_ location: CLLocation) -> Bool {
+        distance(from: location) <= Self.nearbyRadius
+    }
+}
+
 extension Array where Element == Place {
     func sorted(near location: CLLocation?) -> [Place] {
         guard let location else { return self }
-        return sorted {
-            location.distance(from: CLLocation(latitude: $0.latitude, longitude: $0.longitude))
-                < location.distance(from: CLLocation(latitude: $1.latitude, longitude: $1.longitude))
+        return sorted { $0.distance(from: location) < $1.distance(from: location) }
+    }
+}
+
+extension CLLocationDistance {
+    var shortText: String {
+        if self < 1000 {
+            return "\(Int((self / 10).rounded()) * 10)m"
         }
+        return String(format: "%.1fkm", self / 1000)
     }
 }

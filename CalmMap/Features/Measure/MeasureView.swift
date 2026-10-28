@@ -1,4 +1,5 @@
 import AVFAudio
+import CoreLocation
 import SwiftData
 import SwiftUI
 
@@ -40,7 +41,7 @@ struct MeasureView: View {
             .background(CalmBackdrop())
             .navigationTitle("소리 측정")
             .sheet(isPresented: $showingPlacePicker) {
-                PlacePickerView(places: places.sorted(near: location.location)) { picked in
+                PlacePickerView(places: places.sorted(near: location.location), location: location.location) { picked in
                     place = picked
                     showingPlacePicker = false
                 }
@@ -56,8 +57,9 @@ struct MeasureView: View {
                 toasts.show("다른 소리가 끼어들어 측정이 중단됐어요. 다시 시작해 주세요.", style: .warning, duration: .seconds(4))
             }
             .onChange(of: location.location) {
-                if place == nil {
-                    place = places.sorted(near: location.location).first
+                guard place == nil, let current = location.location else { return }
+                if let nearest = places.sorted(near: current).first, nearest.isNearby(current) {
+                    place = nearest
                 }
             }
         }
@@ -80,6 +82,17 @@ struct MeasureView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("측정 장소").font(.caption).foregroundStyle(.secondary)
                     Text(place?.name ?? "장소를 골라 주세요").font(.headline)
+                    if let current = location.location {
+                        if let place {
+                            Label("현재 위치에서 \(place.distance(from: current).shortText)", systemImage: "location")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        } else {
+                            Label("근처 500m 안에 실시간 데이터 장소가 없어요", systemImage: "location")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
                 }
                 Spacer()
                 Image(systemName: "chevron.right").foregroundStyle(.secondary)
@@ -252,6 +265,7 @@ struct FlowTags: View {
 
 struct PlacePickerView: View {
     let places: [Place]
+    let location: CLLocation?
     let onPick: (Place) -> Void
     @State private var query = ""
 
@@ -265,9 +279,17 @@ struct PlacePickerView: View {
                 Button {
                     onPick(place)
                 } label: {
-                    VStack(alignment: .leading) {
-                        Text(place.name)
-                        Text(place.category).font(.caption).foregroundStyle(.secondary)
+                    HStack {
+                        VStack(alignment: .leading) {
+                            Text(place.name)
+                            Text(place.category).font(.caption).foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        if let location {
+                            Text(place.distance(from: location).shortText)
+                                .font(.subheadline.monospacedDigit())
+                                .foregroundStyle(.secondary)
+                        }
                     }
                 }
                 .foregroundStyle(.primary)
