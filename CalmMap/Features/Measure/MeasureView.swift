@@ -178,6 +178,25 @@ struct MeasureView: View {
         }
     }
 
+    private var loudnessIndicator: some View {
+        let level = LoudnessLevel(loudness: SoundScore.loudness(averageDecibels: meter.currentDecibels))
+        return HStack(spacing: 6) {
+            Text(level.title)
+                .font(.footnote.weight(.medium))
+                .foregroundStyle(Color.calmInk)
+            HStack(spacing: 3) {
+                ForEach(1...3, id: \.self) { step in
+                    Capsule()
+                        .fill(Color.calmInk.opacity(step <= level.rawValue ? 1 : 0.18))
+                        .frame(width: 14, height: 5)
+                }
+            }
+        }
+        .animation(.easeOut(duration: 0.25), value: level)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("지금 소리 크기, \(level.title)")
+    }
+
     private var measuringSection: some View {
         VStack(spacing: 16) {
             ZStack {
@@ -187,6 +206,8 @@ struct MeasureView: View {
                         .font(.system(size: 56, weight: .semibold, design: .rounded).monospacedDigit())
                         .contentTransition(.numericText())
                     Text("초 남았어요").font(.subheadline).foregroundStyle(.secondary)
+                    loudnessIndicator
+                        .padding(.top, 6)
                 }
             }
             .frame(height: 260)
