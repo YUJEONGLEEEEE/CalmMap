@@ -18,7 +18,7 @@ struct MeasureView: View {
     @State private var brightLight = false
     @State private var flicker = false
 
-    private let places = Place.loadBundled()
+    private var places: [Place] { model.places }
 
     var body: some View {
         NavigationStack {
@@ -154,10 +154,7 @@ struct MeasureView: View {
             Image(systemName: "info.circle")
                 .foregroundStyle(Color.calmInk)
         }
-        .padding(12)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.calmTint, in: RoundedRectangle(cornerRadius: 16))
-        .calmGlass(RoundedRectangle(cornerRadius: 16))
+        .calmTintCard(padding: 12, cornerRadius: 16)
     }
 
     private func startMeasuring() async {

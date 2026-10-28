@@ -127,10 +127,7 @@ struct PlaceDetailView: View {
             Image(systemName: "clock")
                 .foregroundStyle(Color.calmInk)
         }
-        .padding()
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.calmTint, in: RoundedRectangle(cornerRadius: 20))
-        .calmGlass(RoundedRectangle(cornerRadius: 20))
+        .calmTintCard()
     }
 
     private var forecastChart: some View {

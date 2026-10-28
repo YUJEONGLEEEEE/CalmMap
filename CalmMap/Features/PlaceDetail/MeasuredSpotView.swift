@@ -83,10 +83,7 @@ struct MeasuredSpotView: View {
             Image(systemName: "info.circle")
                 .foregroundStyle(Color.calmInk)
         }
-        .padding()
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.calmTint, in: RoundedRectangle(cornerRadius: 20))
-        .calmGlass(RoundedRectangle(cornerRadius: 20))
+        .calmTintCard()
     }
 
     private func heardSounds(_ measurement: SoundMeasurement, score: Double) -> some View {
