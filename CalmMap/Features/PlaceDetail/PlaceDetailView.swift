@@ -31,6 +31,15 @@ struct PlaceDetailView: View {
                         breakdown(reading: reading, live: live)
                             .calmCard()
                         measureButton
+                    } else if model.isLoading {
+                        VStack(spacing: 12) {
+                            ProgressView()
+                            Text("장소 정보를 불러오는 중이에요")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 60)
                     } else {
                         ContentUnavailableView(
                             "데이터를 불러오지 못했어요",

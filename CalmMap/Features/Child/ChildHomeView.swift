@@ -209,10 +209,11 @@ struct ChildHomeView: View {
     @ViewBuilder
     private func recommendations(for child: ChildProfile) -> some View {
         if rated.isEmpty {
+            let failed = !model.isLoading && model.errorMessage != nil
             VStack(alignment: .leading, spacing: 8) {
-                Text("장소 정보를 불러오는 중이에요")
+                Text(failed ? "장소 정보를 불러오지 못했어요" : "장소 정보를 불러오는 중이에요")
                     .font(.headline)
-                Text("지도 탭에서 새로고침하면 추천이 나타나요.")
+                Text(failed ? "인터넷 연결을 확인하고 지도 탭에서 새로고침해 주세요." : "지도 탭에서 새로고침하면 추천이 나타나요.")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
