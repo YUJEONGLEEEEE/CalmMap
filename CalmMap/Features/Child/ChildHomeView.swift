@@ -119,11 +119,12 @@ struct ChildHomeView: View {
     private var childPicker: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
-                chip(title: "일반 기준", systemImage: "map", isOn: activeChild == nil) {
+                chip(title: "일반 기준", icon: Image(systemName: "map"), isOn: activeChild == nil) {
                     activeChildID = ""
                 }
                 ForEach(children) { child in
-                    chip(title: child.name, systemImage: "figure.child", isOn: child.id == activeChild?.id) {
+                    let isOn = child.id == activeChild?.id
+                    chip(title: child.name, icon: Image(isOn ? "TabChildFill" : "TabChild"), isOn: isOn) {
                         activeChildID = child.id.uuidString
                     }
                 }
@@ -132,9 +133,17 @@ struct ChildHomeView: View {
         }
     }
 
-    private func chip(title: String, systemImage: String, isOn: Bool, action: @escaping () -> Void) -> some View {
+    private func chip(title: String, icon: Image, isOn: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Label(title, systemImage: systemImage)
+            Label {
+                Text(title)
+            } icon: {
+                icon
+                    .resizable()
+                    .renderingMode(.template)
+                    .scaledToFit()
+                    .frame(width: 17, height: 17)
+            }
                 .font(.subheadline.weight(isOn ? .semibold : .regular))
                 .foregroundStyle(isOn ? Color.calmOnInk : Color.primary)
                 .padding(.horizontal, 14)
