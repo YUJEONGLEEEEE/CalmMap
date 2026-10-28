@@ -86,13 +86,11 @@ struct SensoryMapView: View {
             }
             .sheet(item: $selected) { entry in
                 PlaceDetailView(placeCode: entry.place.code)
-                    .presentationDetents([.medium, .large])
-                    .presentationBackground { CalmBackdrop() }
+                    .calmDetailSheet()
             }
             .sheet(item: $selectedSpot) { spot in
                 MeasuredSpotView(spotID: spot.id)
-                    .presentationDetents([.medium, .large])
-                    .presentationBackground { CalmBackdrop() }
+                    .calmDetailSheet()
             }
             .task {
                 model.apply(measurements: measurements)

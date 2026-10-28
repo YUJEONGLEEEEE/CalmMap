@@ -84,8 +84,7 @@ struct ChildHomeView: View {
             }
             .sheet(item: $selectedPlace) { entry in
                 PlaceDetailView(placeCode: entry.place.code)
-                    .presentationDetents([.medium, .large])
-                    .presentationBackground { CalmBackdrop() }
+                    .calmDetailSheet()
             }
         }
     }

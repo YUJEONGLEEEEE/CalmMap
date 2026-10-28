@@ -18,7 +18,7 @@ final class SensoryMapModel {
     private(set) var errorMessage: String?
     private(set) var profile: SensoryProfile = .general
 
-    private let places: [Place]
+    let places: [Place]
     private let client: CityDataClient
     private var snapshot: CitySnapshot?
     private var measurements: [SoundMeasurement] = []

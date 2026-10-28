@@ -7,8 +7,6 @@ struct NoiseBaseline: Decodable {
         let weekend: [Double?]
     }
 
-    let periodStart: String
-    let periodEnd: String
     let places: [String: Profile]
 
     static let shared: NoiseBaseline? = {

@@ -132,6 +132,20 @@ extension View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .calmGlass(RoundedRectangle(cornerRadius: 20))
     }
+
+    func calmTintCard(padding: CGFloat? = nil, cornerRadius: CGFloat = 20) -> some View {
+        self
+            .padding(.all, padding)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color.calmTint, in: RoundedRectangle(cornerRadius: cornerRadius))
+            .calmGlass(RoundedRectangle(cornerRadius: cornerRadius))
+    }
+
+    func calmDetailSheet() -> some View {
+        self
+            .presentationDetents([.medium, .large])
+            .presentationBackground { CalmBackdrop() }
+    }
 }
 
 extension ButtonStyle where Self == CalmPrimaryButtonStyle {

@@ -5,12 +5,10 @@ import Observation
 final class LocationProvider: NSObject, CLLocationManagerDelegate {
     private(set) var location: CLLocation?
     private(set) var areaName: String?
-    private(set) var authorization: CLAuthorizationStatus
     private let manager = CLLocationManager()
     private let geocoder = CLGeocoder()
 
     override init() {
-        authorization = manager.authorizationStatus
         super.init()
         manager.delegate = self
         manager.desiredAccuracy = kCLLocationAccuracyHundredMeters
@@ -30,7 +28,6 @@ final class LocationProvider: NSObject, CLLocationManagerDelegate {
     nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         let status = manager.authorizationStatus
         Task { @MainActor in
-            self.authorization = status
             if status == .authorizedWhenInUse || status == .authorizedAlways {
                 self.manager.requestLocation()
             }
