@@ -139,7 +139,7 @@ enum CalmWindowAdvisor {
         }
         guard let firstCalm = hourly.first(where: { $0.reading.tier == .calm }) else {
             if let best = hourly.min(by: { $0.reading.score < $1.reading.score }), best.reading.score < current.score {
-                return "앞으로 12시간 중 \(hourText(best.date, calendar: calendar))이 가장 덜 붐빌 것 같아요."
+                return "앞으로 12시간 중 \(hourText(best.date, calendar: calendar))가 가장 덜 붐빌 것 같아요."
             }
             return "앞으로 12시간 동안 무던한 시간대가 예상되지 않아요."
         }

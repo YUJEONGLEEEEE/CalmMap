@@ -10,6 +10,7 @@ struct MeasureView: View {
     @Environment(SensoryMapModel.self) private var model
     @Environment(\.modelContext) private var modelContext
     @Environment(\.openURL) private var openURL
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var meter = SoundMeter()
     @State private var location = LocationProvider()
     @State private var place: Place?
@@ -24,7 +25,9 @@ struct MeasureView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
-                    privacyNote
+                    if meter.state != .measuring {
+                        privacyNote
+                    }
                     placeSelector
                     if useCurrentLocation {
                         soundOnlyNote
@@ -86,7 +89,7 @@ struct MeasureView: View {
     }
 
     private var privacyNote: some View {
-        Label("소리는 기기 안에서만 분석해요. 녹음 파일은 저장하거나 전송하지 않아요.", systemImage: "lock.shield")
+        Label("소리는 기기 안에서만 분석해요.\n녹음 파일은 저장하거나 전송하지 않아요.", systemImage: "lock.shield")
             .font(.footnote)
             .foregroundStyle(.secondary)
             .padding(12)
@@ -116,7 +119,11 @@ struct MeasureView: View {
                     }
                 }
                 Spacer()
-                Image(systemName: "chevron.right").foregroundStyle(.secondary)
+                if meter.state == .measuring {
+                    measuringBadge
+                } else {
+                    Image(systemName: "chevron.right").foregroundStyle(.secondary)
+                }
             }
             .calmCard()
         }
@@ -124,12 +131,31 @@ struct MeasureView: View {
         .disabled(meter.state == .measuring)
     }
 
+    private var measuringBadge: some View {
+        HStack(spacing: 5) {
+            Circle()
+                .fill(Color.calmInk)
+                .frame(width: 6, height: 6)
+                .phaseAnimator([1.0, 0.25]) { content, phase in
+                    content.opacity(reduceMotion ? 1 : phase)
+                } animation: { _ in
+                    .easeInOut(duration: 0.6)
+                }
+            Text("측정 중")
+                .font(.caption2.weight(.semibold))
+        }
+        .foregroundStyle(Color.calmInk)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 5)
+        .background(Color.calmTint, in: Capsule())
+    }
+
     private var startSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             if case .failed(let message) = meter.state {
                 Text(message).font(.footnote).foregroundStyle(.red)
             }
-            Text("\(Int(SoundMeter.duration))초 동안 주변 소리의 종류와 크기를 살펴요. 폰을 손에 들고 평소처럼 서 있으면 돼요.")
+            Text("\(Int(SoundMeter.duration))초 동안 주변 소리의 종류와 크기를 살펴요.\n폰을 손에 들고 평소처럼 서 있으면 돼요.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
             Button {
@@ -148,7 +174,7 @@ struct MeasureView: View {
 
     private var soundOnlyNote: some View {
         Label {
-            Text("근처에 실시간 데이터 장소가 없어서 소리만 기록해요. 서울 121곳 근처에서는 사람 붐빔까지 함께 계산해요.")
+            Text("근처에 실시간 데이터 장소가 없어서 소리만 기록해요.\n서울 121곳 근처에서는 사람 붐빔까지 함께 계산해요.")
                 .font(.footnote)
         } icon: {
             Image(systemName: "info.circle")
@@ -178,6 +204,25 @@ struct MeasureView: View {
         }
     }
 
+    private var loudnessIndicator: some View {
+        let level = LoudnessLevel(loudness: SoundScore.loudness(averageDecibels: meter.currentDecibels))
+        return HStack(spacing: 6) {
+            Text(level.title)
+                .font(.footnote.weight(.medium))
+                .foregroundStyle(Color.calmInk)
+            HStack(spacing: 3) {
+                ForEach(1...3, id: \.self) { step in
+                    Capsule()
+                        .fill(Color.calmInk.opacity(step <= level.rawValue ? 1 : 0.18))
+                        .frame(width: 14, height: 5)
+                }
+            }
+        }
+        .animation(.easeOut(duration: 0.25), value: level)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("지금 소리 크기, \(level.title)")
+    }
+
     private var measuringSection: some View {
         VStack(spacing: 16) {
             ZStack {
@@ -187,6 +232,8 @@ struct MeasureView: View {
                         .font(.system(size: 56, weight: .semibold, design: .rounded).monospacedDigit())
                         .contentTransition(.numericText())
                     Text("초 남았어요").font(.subheadline).foregroundStyle(.secondary)
+                    loudnessIndicator
+                        .padding(.top, 6)
                 }
             }
             .frame(height: 260)
@@ -274,9 +321,14 @@ struct MeasureView: View {
         modelContext.insert(measurement)
         try? modelContext.save()
         if useCurrentLocation {
-            toasts.show("현재 위치에 저장했어요. 지도에 표시됐어요.", style: .success)
+            let spotID = measurement.id
+            toasts.show("현재 위치에 저장했어요", style: .success, duration: .seconds(4.5), actionTitle: "지도에서 보기") { [router] in
+                router.showOnMap(.spot(spotID))
+            }
         } else if let place {
-            toasts.show("\(place.name)에 저장했어요. 지도에 반영됐어요.", style: .success)
+            toasts.show("\(place.name)에 저장했어요", style: .success, duration: .seconds(4.5), actionTitle: "지도에서 보기") { [router] in
+                router.showOnMap(.place(place.code))
+            }
         }
         brightLight = false
         flicker = false
@@ -300,6 +352,7 @@ struct MeasureView: View {
 
 struct FlowTags: View {
     let categories: [SoundCategory]
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         HStack(spacing: 8) {
@@ -309,8 +362,10 @@ struct FlowTags: View {
                     .padding(.horizontal, 10)
                     .padding(.vertical, 6)
                     .calmGlass(Capsule())
+                    .transition(reduceMotion ? .opacity : .opacity.combined(with: .offset(y: 6)))
             }
         }
+        .animation(.easeOut(duration: 0.45), value: categories)
     }
 }
 

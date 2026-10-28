@@ -112,3 +112,25 @@ enum SoundScore {
         return min(max(combined, 0), 1)
     }
 }
+
+enum LoudnessLevel: Int {
+    case quiet = 1
+    case moderate
+    case loud
+
+    init(loudness: Double) {
+        switch loudness {
+        case ..<0.38: self = .quiet
+        case ..<0.68: self = .moderate
+        default: self = .loud
+        }
+    }
+
+    var title: String {
+        switch self {
+        case .quiet: "조용함"
+        case .moderate: "보통"
+        case .loud: "큼"
+        }
+    }
+}

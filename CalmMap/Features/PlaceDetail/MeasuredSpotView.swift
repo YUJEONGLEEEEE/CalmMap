@@ -50,7 +50,7 @@ struct MeasuredSpotView: View {
             .navigationTitle("내가 측정한 곳")
             .navigationBarTitleDisplayMode(.inline)
             .confirmationDialog(
-                "이 곳의 측정 기록 \(spot?.measurements.count ?? 0)개를 삭제할까요?",
+                "이곳의 측정 기록 \(spot?.measurements.count ?? 0)개를 삭제할까요?",
                 isPresented: $confirmingDelete,
                 titleVisibility: .visible
             ) {
