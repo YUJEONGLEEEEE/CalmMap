@@ -1,5 +1,6 @@
 import Observation
 import SwiftUI
+import UIKit
 
 @Observable
 final class ToastCenter {
@@ -33,9 +34,12 @@ final class ToastCenter {
     ) {
         let toast = Toast(message: message, style: style, actionTitle: actionTitle, action: action)
         current = toast
+        let spoken = actionTitle.map { "\(message). \($0) 버튼이 있어요." } ?? message
+        AccessibilityNotification.Announcement(spoken).post()
+        let visible = UIAccessibility.isVoiceOverRunning ? max(duration, .seconds(8)) : duration
         dismissTask?.cancel()
         dismissTask = Task { [weak self] in
-            try? await Task.sleep(for: duration)
+            try? await Task.sleep(for: visible)
             guard !Task.isCancelled, self?.current?.id == toast.id else { return }
             self?.current = nil
         }
@@ -59,6 +63,7 @@ private extension ToastCenter.Toast.Style {
 
 struct ToastOverlay: ViewModifier {
     @Environment(ToastCenter.self) private var toasts
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     func body(content: Content) -> some View {
         content.overlay(alignment: .bottom) {
@@ -87,7 +92,7 @@ struct ToastOverlay: ViewModifier {
                     .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
                     .padding(.horizontal, 20)
                     .padding(.bottom, 24)
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
                     .onTapGesture { toasts.dismiss() }
                     .accessibilityAddTraits(.isStaticText)
                     .id(toast.id)

@@ -82,6 +82,7 @@ struct SensoryMapView: View {
                                 Image(systemName: "arrow.clockwise")
                             }
                         }
+                        .disabled(model.isLoading)
                         .accessibilityLabel("새로고침")
                     }
                 }
@@ -213,13 +214,17 @@ struct SensoryMapView: View {
     }
 
     private func refresh(announce: Bool) async {
-        let succeeded = await model.refresh()
-        if succeeded {
+        switch await model.refresh() {
+        case .loaded:
             if announce, let updatedAt = model.updatedAt {
                 toasts.show("업데이트했어요 · \(updatedAt.formatted(date: .omitted, time: .shortened)) 기준", style: .success)
             }
-        } else if model.errorMessage != nil, hasSeenIntro {
-            presentLoadError()
+        case .failed:
+            if hasSeenIntro {
+                presentLoadError()
+            }
+        case .skipped:
+            break
         }
     }
 

@@ -24,6 +24,7 @@ final class SoundMeter {
     static let duration: TimeInterval = 60
 
     private(set) var state: State = .idle
+    private var isStarting = false
     private(set) var elapsed: TimeInterval = 0
     private(set) var currentDecibels: Double = -80
     private(set) var recentCategories: [SoundCategory] = []
@@ -44,7 +45,9 @@ final class SoundMeter {
     var progress: Double { min(elapsed / Self.duration, 1) }
 
     func start() async {
-        guard state != .measuring else { return }
+        guard state != .measuring, !isStarting else { return }
+        isStarting = true
+        defer { isStarting = false }
         let granted = await AVAudioApplication.requestRecordPermission()
         guard granted else {
             state = .denied
@@ -159,6 +162,12 @@ final class SoundMeter {
     private func finish() {
         guard state == .measuring else { return }
         stopEngine()
+        guard decibelSamples.count >= Int(Self.duration) else {
+            elapsed = 0
+            recentCategories = []
+            state = .failed("소리가 충분히 들어오지 않아 측정을 마치지 못했어요. 다시 시작해 주세요.")
+            return
+        }
         let total = categoryCounts.values.reduce(0, +)
         var ratios: [SoundCategory: Double] = [:]
         if total > 0 {

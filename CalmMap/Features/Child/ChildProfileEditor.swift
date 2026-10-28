@@ -16,6 +16,9 @@ struct ChildProfileEditor: View {
     @State private var flicker = false
     @State private var note = ""
     @State private var confirmingDelete = false
+    @State private var originalName = ""
+
+    private static let nameLimit = 10
 
     private var trimmedName: String {
         name.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -25,8 +28,19 @@ struct ChildProfileEditor: View {
         NavigationStack {
             Form {
                 Section {
-                    TextField("이름 또는 별명", text: $name)
-                        .textInputAutocapitalization(.never)
+                    HStack {
+                        TextField("이름 또는 별명", text: $name)
+                            .textInputAutocapitalization(.never)
+                            .onChange(of: name) {
+                                if name.count > Self.nameLimit {
+                                    name = String(name.prefix(Self.nameLimit))
+                                }
+                            }
+                        Text("\(name.count)/\(Self.nameLimit)")
+                            .font(.caption.monospacedDigit())
+                            .foregroundStyle(.secondary)
+                            .accessibilityLabel("\(Self.nameLimit)자 중 \(name.count)자")
+                    }
                 } header: {
                     Text("아이")
                 } footer: {
@@ -97,7 +111,7 @@ struct ChildProfileEditor: View {
                         .disabled(trimmedName.isEmpty)
                 }
             }
-            .confirmationDialog("\(child?.name ?? "") 프로필을 삭제할까요?", isPresented: $confirmingDelete, titleVisibility: .visible) {
+            .confirmationDialog("\(originalName) 프로필을 삭제할까요?", isPresented: $confirmingDelete, titleVisibility: .visible) {
                 Button("삭제", role: .destructive) { delete() }
             } message: {
                 Text("지도는 일반 기준으로 돌아가요.")
@@ -125,6 +139,7 @@ struct ChildProfileEditor: View {
     private func load() {
         guard let child else { return }
         name = child.name
+        originalName = child.name
         crowd = child.crowd
         loudness = child.loudness
         triggers = child.triggers
