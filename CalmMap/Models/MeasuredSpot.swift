@@ -29,7 +29,7 @@ struct MeasuredSpot: Identifiable {
     static func group(_ measurements: [SoundMeasurement]) -> [MeasuredSpot] {
         let located = measurements
             .filter(\.isAtCurrentLocation)
-            .sorted { $0.measuredAt > $1.measuredAt }
+            .sorted { $0.measuredAt < $1.measuredAt }
             .compactMap { measurement -> (SoundMeasurement, CLLocation)? in
                 guard let latitude = measurement.latitude, let longitude = measurement.longitude else { return nil }
                 return (measurement, CLLocation(latitude: latitude, longitude: longitude))
@@ -43,13 +43,14 @@ struct MeasuredSpot: Identifiable {
             }
         }
         return buckets.compactMap { bucket in
-            guard let first = bucket.items.first else { return nil }
+            guard let oldest = bucket.items.first else { return nil }
+            let newestFirst = Array(bucket.items.reversed())
             return MeasuredSpot(
-                id: first.id,
+                id: oldest.id,
                 latitude: bucket.anchor.coordinate.latitude,
                 longitude: bucket.anchor.coordinate.longitude,
-                areaName: bucket.items.lazy.compactMap(\.areaName).first,
-                measurements: bucket.items
+                areaName: newestFirst.lazy.compactMap(\.areaName).first,
+                measurements: newestFirst
             )
         }
     }

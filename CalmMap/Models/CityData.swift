@@ -53,12 +53,10 @@ struct LivePlace: Codable, Hashable {
 }
 
 struct CitySnapshot: Codable {
-    let updatedAt: String?
     let places: [String: LivePlace]
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        updatedAt = try container.decodeIfPresent(String.self, forKey: .updatedAt)
         places = try container.decode([String: Lossy<LivePlace>].self, forKey: .places).compactMapValues(\.value)
     }
 }

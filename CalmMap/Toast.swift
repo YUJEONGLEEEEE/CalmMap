@@ -69,6 +69,7 @@ private extension ToastCenter.Toast.Style {
 }
 
 struct ToastOverlay: ViewModifier {
+    var showsActions = true
     @Environment(ToastCenter.self) private var toasts
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -77,7 +78,7 @@ struct ToastOverlay: ViewModifier {
             if let toast = toasts.current {
                 HStack(spacing: 10) {
                     Label(toast.message, systemImage: toast.style.symbolName)
-                    if let title = toast.actionTitle, let action = toast.action {
+                    if showsActions, let title = toast.actionTitle, let action = toast.action {
                         Button {
                             toasts.dismiss()
                             action()
@@ -111,7 +112,7 @@ struct ToastOverlay: ViewModifier {
 }
 
 extension View {
-    func toastOverlay() -> some View {
-        modifier(ToastOverlay())
+    func toastOverlay(showsActions: Bool = true) -> some View {
+        modifier(ToastOverlay(showsActions: showsActions))
     }
 }

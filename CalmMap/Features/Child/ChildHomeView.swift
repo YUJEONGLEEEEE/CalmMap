@@ -221,11 +221,10 @@ struct ChildHomeView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .calmCard()
             } else {
-                let failed = model.errorMessage != nil
                 VStack(alignment: .leading, spacing: 8) {
-                    Text(failed ? "장소 정보를 불러오지 못했어요" : "아직 장소 정보가 없어요")
+                    Text(model.loadFailure == nil ? "아직 장소 정보가 없어요" : "장소 정보를 불러오지 못했어요")
                         .font(.headline)
-                    Text(failed ? "인터넷 연결을 확인하고 지도 탭에서 새로고침해 주세요." : "지도 탭에서 새로고침하면 추천이 나타나요.")
+                    Text(model.loadFailure.map { "\($0.message) 지도 탭에서 새로고침할 수 있어요." } ?? "지도 탭에서 새로고침하면 추천이 나타나요.")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }

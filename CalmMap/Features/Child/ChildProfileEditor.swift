@@ -167,7 +167,7 @@ struct ChildProfileEditor: View {
                 } header: {
                     Text("빛")
                 } footer: {
-                    Text("측정할 때 조명을 체크한 곳에만 반영돼요.")
+                    Text("측정할 때 조명을 체크한 곳에, 측정한 시간대 앞뒤 2시간 동안 반영돼요.")
                 }
 
                 Section {
@@ -202,7 +202,7 @@ struct ChildProfileEditor: View {
             }
         }
         .interactiveDismissDisabled(hasChanges)
-        .toastOverlay()
+        .toastOverlay(showsActions: false)
         .calmAlertOverlay()
         .environment(sheetAlerts)
     }

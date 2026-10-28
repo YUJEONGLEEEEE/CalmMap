@@ -37,7 +37,7 @@ struct StepSlider<Value: Hashable>: View {
                 .onTapGesture(coordinateSpace: .local) { location in
                     select(at: location.x, travel: travel)
                 }
-                .highPriorityGesture(
+                .simultaneousGesture(
                     DragGesture(minimumDistance: 8)
                         .onChanged { value in
                             guard abs(value.translation.width) > abs(value.translation.height) else { return }

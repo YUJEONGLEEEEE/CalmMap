@@ -110,9 +110,11 @@ struct MeasureView: View {
                 if scenePhase == .background, meter.state == .measuring {
                     meter.cancel()
                     stoppedInBackground = true
-                } else if scenePhase == .active, stoppedInBackground {
-                    stoppedInBackground = false
+                } else if scenePhase == .active {
                     location.requestOnce()
+                }
+                if scenePhase == .active, stoppedInBackground {
+                    stoppedInBackground = false
                     toasts.show("앱을 나가서 측정을 멈췄어요.\n다시 시작해 주세요.", style: .warning, duration: .seconds(4))
                 }
             }
@@ -295,11 +297,7 @@ struct MeasureView: View {
                 Image(systemName: "location.slash")
                     .foregroundStyle(Color.calmInk)
             }
-            Button("설정 열기") {
-                if let url = URL(string: UIApplication.openSettingsURLString) {
-                    openURL(url)
-                }
-            }
+            Button("설정 열기", action: openSettings)
             .font(.subheadline.weight(.semibold))
             .tint(Color.calmInk)
         }
@@ -307,14 +305,25 @@ struct MeasureView: View {
     }
 
     private var micDeniedNote: some View {
-        Label {
-            Text("마이크 권한이 꺼져 있어 측정할 수 없어요. 설정에서 마이크를 허용해 주세요.")
-                .font(.footnote)
-        } icon: {
-            Image(systemName: "mic.slash")
-                .foregroundStyle(Color.calmInk)
+        VStack(alignment: .leading, spacing: 10) {
+            Label {
+                Text("마이크 권한이 꺼져 있어 측정할 수 없어요. 설정에서 마이크를 허용해 주세요.")
+                    .font(.footnote)
+            } icon: {
+                Image(systemName: "mic.slash")
+                    .foregroundStyle(Color.calmInk)
+            }
+            Button("설정 열기", action: openSettings)
+                .font(.subheadline.weight(.semibold))
+                .tint(Color.calmInk)
         }
         .calmTintCard(padding: 12, cornerRadius: 16)
+    }
+
+    private func openSettings() {
+        if let url = URL(string: UIApplication.openSettingsURLString) {
+            openURL(url)
+        }
     }
 
     private var soundOnlyText: String {
@@ -353,12 +362,9 @@ struct MeasureView: View {
                 title: "마이크 권한이 필요해요",
                 message: "설정에서 마이크 접근을 허용하면 측정할 수 있어요. 소리는 기기 안에서만 분석해요.",
                 cancelTitle: "취소",
-                actionTitle: "설정 열기"
-            ) {
-                if let url = URL(string: UIApplication.openSettingsURLString) {
-                    openURL(url)
-                }
-            }
+                actionTitle: "설정 열기",
+                action: openSettings
+            )
         } else {
             toasts.show("마이크 권한이 없어 측정할 수 없어요.")
         }

@@ -163,7 +163,7 @@ struct SensoryMapView: View {
     private func checkOutsideSeoul(_ current: CLLocation) {
         let nearest = model.places.map { $0.distance(from: current) }.min() ?? 0
         guard nearest > 30_000 else { return }
-        toasts.show("서울 밖이에요 · 실시간 정보는 서울 121곳에서 볼 수 있어요", duration: .seconds(5), actionTitle: "서울로 이동") { [self] in
+        toasts.show("실시간 정보는 서울에서만 볼 수 있어요", duration: .seconds(5), actionTitle: "서울로 이동") { [self] in
             move(to: Self.seoulRegion)
         }
     }
@@ -324,10 +324,12 @@ struct SensoryMapView: View {
         case .place(let code):
             let entry = model.entry(for: code)
             coordinate = entry?.place.coordinate
+            selectedSpot = nil
             selected = entry
         case .spot(let id):
             let spot = model.spot(id: id)
             coordinate = spot?.coordinate
+            selected = nil
             selectedSpot = spot
             if spot == nil {
                 toasts.show("측정 기록을 찾을 수 없어요. 이미 삭제됐을 수 있어요.")
@@ -349,7 +351,7 @@ struct SensoryMapView: View {
         withAnimation(.easeOut(duration: 0.5)) {
             veilOpacity = 0
         }
-        if model.updatedAt == nil, !model.isLoading, model.errorMessage != nil {
+        if model.updatedAt == nil, !model.isLoading, model.loadFailure != nil {
             presentLoadError()
         }
     }
@@ -373,7 +375,7 @@ struct SensoryMapView: View {
         alerts.present(
             systemImage: "wifi.exclamationmark",
             title: "데이터를 불러오지 못했어요",
-            message: "인터넷 연결을 확인하거나 잠시 후 다시 시도해 주세요.",
+            message: (model.loadFailure ?? .network).message,
             cancelTitle: "닫기",
             actionTitle: "다시 시도"
         ) {

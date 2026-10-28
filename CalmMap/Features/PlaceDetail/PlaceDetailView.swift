@@ -62,8 +62,12 @@ struct PlaceDetailView: View {
                         ContentUnavailableView(
                             "데이터를 불러오지 못했어요",
                             systemImage: "wifi.exclamationmark",
-                            description: Text("잠시 후 다시 시도해 주세요.")
+                            description: Text((model.loadFailure ?? .network).message)
                         )
+                        if entry != nil {
+                            myMeasurements
+                            measureButton
+                        }
                     }
                     Text("출처: 서울특별시 실시간 도시데이터, 스마트서울 도시데이터 센서(S-DoT) 환경정보 (공공누리 제1유형). 지수는 확률적 예측이며 판정이 아닙니다.")
                         .font(.caption2)
