@@ -143,6 +143,11 @@ struct PlaceDetailView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text("앞으로 12시간")
                 .font(.headline)
+            if hourly.isEmpty {
+                Text("지금은 시간대별 예보를 볼 수 없어요.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            } else {
             Chart(hourly) { item in
                 BarMark(
                     x: .value("시각", item.date, unit: .hour),
@@ -162,11 +167,14 @@ struct PlaceDetailView: View {
             .chartXAxis {
                 AxisMarks(values: .stride(by: .hour, count: 3)) { _ in
                     AxisGridLine()
-                    AxisValueLabel(format: .dateTime.hour())
+                    AxisValueLabel(format: Date.FormatStyle(timeZone: .seoul).hour())
                 }
             }
+            .environment(\.timeZone, .seoul)
+            .environment(\.calendar, .seoul)
             .frame(height: 180)
             .accessibilityLabel("시간대별 감각부하 예측")
+            }
         }
     }
 

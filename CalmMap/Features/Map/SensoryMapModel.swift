@@ -13,6 +13,7 @@ final class SensoryMapModel {
 
     private(set) var entries: [Entry] = []
     private(set) var spots: [MeasuredSpot] = []
+    private(set) var fetchedAt: Date?
     private(set) var updatedAt: Date?
     private(set) var isLoading = false
     private(set) var errorMessage: String?
@@ -42,6 +43,7 @@ final class SensoryMapModel {
         defer { isLoading = false }
         do {
             snapshot = try await client.fetchSnapshot()
+            fetchedAt = Date()
             rebuild()
             errorMessage = nil
             return .loaded

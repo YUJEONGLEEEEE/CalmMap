@@ -72,15 +72,19 @@ private struct Lossy<Value: Decodable>: Decodable {
 }
 
 enum CityDataDate {
-    private static let formatter: DateFormatter = {
+    private static let formatters: [DateFormatter] = ["yyyy-MM-dd HH:mm", "yyyy-MM-dd HH:mm:ss", "yyyy-MM-dd'T'HH:mm:ss", "yyyyMMddHHmm"].map { format in
         let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "ko_KR")
+        formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.timeZone = TimeZone(identifier: "Asia/Seoul")
-        formatter.dateFormat = "yyyy-MM-dd HH:mm"
+        formatter.dateFormat = format
         return formatter
-    }()
+    }
 
     static func parse(_ text: String) -> Date? {
-        formatter.date(from: text)
+        let trimmed = text.trimmingCharacters(in: .whitespaces)
+        for formatter in formatters {
+            if let date = formatter.date(from: trimmed) { return date }
+        }
+        return nil
     }
 }
