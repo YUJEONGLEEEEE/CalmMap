@@ -93,8 +93,17 @@ struct PlaceDetailView: View {
     private func personalCard(reading: SensoryReading) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Label("\(model.profile.displayName)에게 맞춘 점수", systemImage: "figure.and.child.holdinghands")
-                    .font(.headline)
+                Label {
+                    Text("\(model.profile.displayName)에게 맞춘 점수")
+                } icon: {
+                    Image("ChildChip")
+                        .resizable()
+                        .renderingMode(.template)
+                        .scaledToFit()
+                        .frame(width: 18, height: 18)
+                        .foregroundStyle(Color.calmInk)
+                }
+                .font(.headline)
                 Spacer()
             }
             HStack(spacing: 8) {
