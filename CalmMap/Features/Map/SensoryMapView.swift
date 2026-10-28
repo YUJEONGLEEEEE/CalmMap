@@ -106,7 +106,10 @@ struct SensoryMapView: View {
             }
             .task {
                 model.apply(measurements: measurements)
-                await refresh(announce: false)
+                let stale = model.fetchedAt.map { Date().timeIntervalSince($0) > 600 } ?? true
+                if stale {
+                    await refresh(announce: false)
+                }
             }
             .onChange(of: measurements.count) {
                 model.apply(measurements: measurements)
@@ -186,6 +189,27 @@ struct SensoryMapView: View {
         .calmCard()
         .padding(.horizontal)
         .padding(.bottom, 16)
+    }
+
+    private var tierLegend: some View {
+        ForEach(SensoryTier.allCases, id: \.self) { tier in
+            HStack(spacing: 6) {
+                TierBadge(tier: tier, size: 20)
+                Text("\(tier.title) \(model.count(of: tier))")
+                    .font(.footnote.weight(.medium))
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var spotLegend: some View {
+        if !model.spots.isEmpty {
+            HStack(spacing: 6) {
+                MeasuredSpotPin(tier: .calm, size: 20)
+                Text("내 측정 \(model.spots.count)")
+                    .font(.footnote.weight(.medium))
+            }
+        }
     }
 
     private var childIcon: some View {
@@ -281,7 +305,7 @@ struct SensoryMapView: View {
         switch await model.refresh() {
         case .loaded:
             if announce, let updatedAt = model.updatedAt {
-                toasts.show("업데이트했어요 · \(updatedAt.formatted(date: .omitted, time: .shortened)) 기준", style: .success)
+                toasts.show("업데이트했어요 · \(updatedAt.seoulTimeText) 기준", style: .success)
             }
         case .failed:
             if hasSeenIntro {
@@ -307,23 +331,19 @@ struct SensoryMapView: View {
     private var header: some View {
         VStack(spacing: 6) {
             if let updatedAt = model.updatedAt {
-                HStack(spacing: model.spots.isEmpty ? 14 : 10) {
-                    ForEach(SensoryTier.allCases, id: \.self) { tier in
-                        HStack(spacing: 6) {
-                            TierBadge(tier: tier, size: 20)
-                            Text("\(tier.title) \(model.count(of: tier))")
-                                .font(.footnote.weight(.medium))
-                        }
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: model.spots.isEmpty ? 14 : 10) {
+                        tierLegend
+                        spotLegend
                     }
-                    if !model.spots.isEmpty {
-                        HStack(spacing: 6) {
-                            MeasuredSpotPin(tier: .calm, size: 20)
-                            Text("내 측정 \(model.spots.count)")
-                                .font(.footnote.weight(.medium))
+                    VStack(spacing: 6) {
+                        HStack(spacing: 12) {
+                            tierLegend
                         }
+                        spotLegend
                     }
                 }
-                Text("\(updatedAt.formatted(date: .omitted, time: .shortened)) 기준 · 서울시 실시간 도시데이터")
+                Text("\(updatedAt.seoulTimeText) 기준 · 서울시 실시간 도시데이터")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             } else if model.isLoading {

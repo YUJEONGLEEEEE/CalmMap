@@ -16,6 +16,25 @@ struct ChildProfileEditor: View {
     @State private var flicker = false
     @State private var note = ""
     @State private var sheetAlerts = AlertCenter()
+    @State private var initialDraft = Draft()
+
+    private struct Draft: Equatable {
+        var name = ""
+        var crowd: Sensitivity = .usual
+        var loudness: Sensitivity = .usual
+        var triggers: [SoundCategory: TriggerLevel] = [:]
+        var brightLight = false
+        var flicker = false
+        var note = ""
+    }
+
+    private var draft: Draft {
+        Draft(name: name, crowd: crowd, loudness: loudness, triggers: triggers, brightLight: brightLight, flicker: flicker, note: note)
+    }
+
+    private var hasChanges: Bool {
+        draft != initialDraft
+    }
     @State private var originalName = ""
 
     private var nameError: String? {
@@ -115,7 +134,7 @@ struct ChildProfileEditor: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("취소") { dismiss() }
+                    Button("취소") { cancel() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("저장") { save() }
@@ -124,6 +143,7 @@ struct ChildProfileEditor: View {
             }
             .onAppear(perform: load)
         }
+        .interactiveDismissDisabled(hasChanges)
         .calmAlertOverlay()
         .environment(sheetAlerts)
     }
@@ -158,15 +178,34 @@ struct ChildProfileEditor: View {
     }
 
     private func load() {
-        guard let child else { return }
-        name = child.name
-        originalName = child.name
-        crowd = child.crowd
-        loudness = child.loudness
-        triggers = child.triggers
-        brightLight = child.brightLightSensitive
-        flicker = child.flickerSensitive
-        note = child.note
+        if let child {
+            name = child.name
+            originalName = child.name
+            crowd = child.crowd
+            loudness = child.loudness
+            triggers = child.triggers
+            brightLight = child.brightLightSensitive
+            flicker = child.flickerSensitive
+            note = child.note
+        }
+        initialDraft = draft
+    }
+
+    private func cancel() {
+        guard hasChanges else {
+            dismiss()
+            return
+        }
+        sheetAlerts.present(
+            systemImage: "exclamationmark.circle",
+            title: "저장하지 않고 나갈까요?",
+            message: "지금 나가면 바꾼 내용이 저장되지 않아요.",
+            cancelTitle: "계속 수정",
+            actionTitle: "나가기",
+            isDestructive: true
+        ) {
+            dismiss()
+        }
     }
 
     private func save() {

@@ -137,6 +137,9 @@ enum CalmWindowAdvisor {
         if current.tier == .calm {
             return "지금은 무던한 편이에요."
         }
+        guard !hourly.isEmpty else {
+            return "지금은 시간대별 예보를 볼 수 없어요."
+        }
         guard let firstCalm = hourly.first(where: { $0.reading.tier == .calm }) else {
             if let best = hourly.min(by: { $0.reading.score < $1.reading.score }), best.reading.score < current.score {
                 return "앞으로 12시간 중 \(hourText(best.date, calendar: calendar))가 가장 덜 붐빌 것 같아요."
@@ -158,7 +161,17 @@ enum CalmWindowAdvisor {
 extension Calendar {
     static var seoul: Calendar {
         var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = TimeZone(identifier: "Asia/Seoul") ?? .current
+        calendar.timeZone = .seoul
         return calendar
+    }
+}
+
+extension TimeZone {
+    static let seoul = TimeZone(identifier: "Asia/Seoul") ?? .current
+}
+
+extension Date {
+    var seoulTimeText: String {
+        formatted(Date.FormatStyle(date: .omitted, time: .shortened, timeZone: .seoul))
     }
 }

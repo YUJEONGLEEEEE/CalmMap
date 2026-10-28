@@ -13,6 +13,8 @@ struct MeasureView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
     @State private var stoppedInBackground = false
+    @State private var autoSelected = false
+    @State private var spotAnchor: CLLocationCoordinate2D?
     @State private var meter = SoundMeter()
     @State private var location = LocationProvider()
     @State private var place: Place?
@@ -61,11 +63,14 @@ struct MeasureView: View {
                     onPickCurrentLocation: {
                         place = nil
                         useCurrentLocation = true
+                        autoSelected = false
                         showingPlacePicker = false
                     },
                     onPick: { picked in
                         place = picked
                         useCurrentLocation = false
+                        autoSelected = false
+                        spotAnchor = nil
                         showingPlacePicker = false
                     }
                 )
@@ -81,7 +86,14 @@ struct MeasureView: View {
                 adoptRouterPlace()
             }
             .onChange(of: meter.interruptionCount) {
-                toasts.show("전화나 다른 앱 소리 때문에 측정이 멈췄어요.\n다시 시작해 주세요.", style: .warning, duration: .seconds(4))
+                toasts.show(meter.interruptionMessage, style: .warning, duration: .seconds(4))
+            }
+            .onChange(of: meter.state) {
+                if meter.state == .finished, router.selectedTab != .measure {
+                    toasts.show("측정이 끝났어요. 결과를 저장해 주세요.", style: .success, duration: .seconds(4.5), actionTitle: "결과 보기") { [router] in
+                        router.selectedTab = .measure
+                    }
+                }
             }
             .onChange(of: scenePhase) {
                 if scenePhase == .background, meter.state == .measuring {
@@ -93,12 +105,7 @@ struct MeasureView: View {
                 }
             }
             .onChange(of: location.location) {
-                guard place == nil, !useCurrentLocation, let current = location.location else { return }
-                if let nearest = places.sorted(near: current).first, nearest.isNearby(current) {
-                    place = nearest
-                } else {
-                    useCurrentLocation = true
-                }
+                autoSelectPlace()
             }
         }
     }
@@ -124,8 +131,18 @@ struct MeasureView: View {
                         Label(currentLocationText, systemImage: location.isDenied ? "location.slash" : "location")
                             .font(.caption)
                             .foregroundStyle(.secondary)
+                        if let distance = distanceFromSpotAnchor, distance > MeasuredSpot.mergeRadius {
+                            Label("이 핀에서 \(distance.shortText) 떨어져 있어요 · 측정하면 새 핀이 생겨요", systemImage: "exclamationmark.triangle")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
                     } else {
                         Text(place?.name ?? "장소를 골라 주세요").font(.headline)
+                        if place == nil, location.isApproximate {
+                            Label("대략적 위치라 장소를 자동으로 고르지 않았어요", systemImage: "location.circle")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
                         if let place, let current = location.location {
                             if place.isNearby(current) {
                                 Label("현재 위치에서 \(place.distance(from: current).shortText)", systemImage: "location")
@@ -191,6 +208,32 @@ struct MeasureView: View {
 
     private var canMeasure: Bool {
         place != nil || (useCurrentLocation && location.location != nil)
+    }
+
+    private var distanceFromSpotAnchor: CLLocationDistance? {
+        guard let anchor = spotAnchor, let current = location.location else { return nil }
+        return current.distance(from: CLLocation(latitude: anchor.latitude, longitude: anchor.longitude))
+    }
+
+    private func autoSelectPlace() {
+        guard meter.state != .measuring, meter.state != .finished, let current = location.location else { return }
+        guard (place == nil && !useCurrentLocation) || autoSelected else { return }
+        if location.isApproximate {
+            if autoSelected {
+                place = nil
+                useCurrentLocation = false
+                autoSelected = false
+            }
+            return
+        }
+        if let nearest = places.sorted(near: current).first, nearest.isNearby(current) {
+            place = nearest
+            useCurrentLocation = false
+        } else {
+            place = nil
+            useCurrentLocation = true
+        }
+        autoSelected = true
     }
 
     private var currentLocationText: String {
@@ -397,11 +440,16 @@ struct MeasureView: View {
         if let pending = router.measurePlace {
             place = pending
             useCurrentLocation = false
+            autoSelected = false
+            spotAnchor = nil
             router.measurePlace = nil
         }
         if router.measureAtCurrentLocation {
             place = nil
             useCurrentLocation = true
+            autoSelected = false
+            spotAnchor = router.measureAnchor
+            router.measureAnchor = nil
             router.measureAtCurrentLocation = false
             location.requestOnce()
         }
