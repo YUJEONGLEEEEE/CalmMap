@@ -40,6 +40,8 @@ final class SoundMeter {
     private var categoryCounts: [SoundCategory: Int] = [:]
     private var decibelSamples: [Double] = []
     private var interruptionObserver: NSObjectProtocol?
+    private var configurationObserver: NSObjectProtocol?
+    private(set) var interruptionMessage = ""
 
     var remaining: Int { max(Int((Self.duration - elapsed).rounded(.up)), 0) }
     var progress: Double { min(elapsed / Self.duration, 1) }
@@ -117,7 +119,15 @@ final class SoundMeter {
         ) { [weak self] notification in
             let raw = notification.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt
             guard raw.flatMap(AVAudioSession.InterruptionType.init(rawValue:)) == .began else { return }
-            Task { @MainActor [weak self] in self?.interrupt() }
+            Task { @MainActor [weak self] in self?.interrupt(message: "전화나 다른 앱 소리 때문에 측정이 멈췄어요.\n다시 시작해 주세요.") }
+        }
+
+        configurationObserver = NotificationCenter.default.addObserver(
+            forName: .AVAudioEngineConfigurationChange,
+            object: engine,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in self?.interrupt(message: "이어폰이나 오디오 연결이 바뀌어 측정이 멈췄어요.\n다시 시작해 주세요.") }
         }
 
         timer = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true) { [weak self] _ in
@@ -150,8 +160,9 @@ final class SoundMeter {
         decibelSamples.append(decibels)
     }
 
-    private func interrupt() {
+    private func interrupt(message: String) {
         guard state == .measuring else { return }
+        interruptionMessage = message
         stopEngine()
         state = .idle
         elapsed = 0
@@ -194,6 +205,10 @@ final class SoundMeter {
             NotificationCenter.default.removeObserver(interruptionObserver)
         }
         interruptionObserver = nil
+        if let configurationObserver {
+            NotificationCenter.default.removeObserver(configurationObserver)
+        }
+        configurationObserver = nil
         engine?.inputNode.removeTap(onBus: 0)
         engine?.stop()
         analyzer?.completeAnalysis()

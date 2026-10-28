@@ -27,7 +27,7 @@ struct MeasuredSpotView: View {
                             .calmCard()
                         Button {
                             dismiss()
-                            router.measureHere()
+                            router.measureHere(near: spot.coordinate)
                         } label: {
                             Label("여기서 다시 측정하기", systemImage: "waveform")
                         }

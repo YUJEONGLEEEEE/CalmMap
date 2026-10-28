@@ -1,3 +1,4 @@
+import CoreLocation
 import Foundation
 import Observation
 
@@ -12,6 +13,7 @@ final class AppRouter {
     var selectedTab: Tab = .map
     var measurePlace: Place?
     var measureAtCurrentLocation = false
+    var measureAnchor: CLLocationCoordinate2D?
     var mapFocus: MapFocus?
 
     enum MapFocus: Equatable {
@@ -29,7 +31,8 @@ final class AppRouter {
         selectedTab = .map
     }
 
-    func measureHere() {
+    func measureHere(near anchor: CLLocationCoordinate2D? = nil) {
+        measureAnchor = anchor
         measurePlace = nil
         measureAtCurrentLocation = true
         selectedTab = .measure

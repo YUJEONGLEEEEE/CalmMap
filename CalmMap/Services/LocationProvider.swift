@@ -6,6 +6,7 @@ final class LocationProvider: NSObject, CLLocationManagerDelegate {
     private(set) var location: CLLocation?
     private(set) var areaName: String?
     private(set) var isDenied = false
+    private(set) var isApproximate = false
     private let manager = CLLocationManager()
     private let geocoder = CLGeocoder()
 
@@ -43,7 +44,9 @@ final class LocationProvider: NSObject, CLLocationManagerDelegate {
 
     nonisolated func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         let latest = locations.last
+        let approximate = manager.accuracyAuthorization == .reducedAccuracy || (latest?.horizontalAccuracy ?? 0) > Place.nearbyRadius
         Task { @MainActor in
+            self.isApproximate = approximate
             self.location = latest
             self.resolveArea(of: latest)
         }
@@ -53,7 +56,11 @@ final class LocationProvider: NSObject, CLLocationManagerDelegate {
         guard let location else { return }
         geocoder.cancelGeocode()
         geocoder.reverseGeocodeLocation(location, preferredLocale: Locale(identifier: "ko_KR")) { [weak self] placemarks, _ in
-            guard let self, let mark = placemarks?.first else { return }
+            guard let self else { return }
+            guard let mark = placemarks?.first else {
+                Task { @MainActor in self.areaName = nil }
+                return
+            }
             var parts: [String] = []
             for case let part? in [mark.administrativeArea, mark.locality, mark.subLocality] where !parts.contains(part) {
                 parts.append(part)
