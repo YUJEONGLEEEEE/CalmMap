@@ -11,6 +11,7 @@ struct SensoryMapView: View {
     @AppStorage("hasSeenMapIntro") private var hasSeenIntro = false
     @State private var selected: SensoryMapModel.Entry?
     @State private var selectedSpot: MeasuredSpot?
+    @State private var veilOpacity = 0.0
     @State private var position: MapCameraPosition = .region(
         MKCoordinateRegion(
             center: CLLocationCoordinate2D(latitude: 37.5560, longitude: 126.9900),
@@ -100,6 +101,13 @@ struct SensoryMapView: View {
                 model.apply(measurements: measurements)
             }
         }
+        .overlay {
+            Color(light: 0xD7DFEA, dark: 0x1A2940)
+                .opacity(veilOpacity)
+                .ignoresSafeArea()
+                .allowsHitTesting(veilOpacity > 0)
+                .accessibilityHidden(true)
+        }
     }
 
     @ViewBuilder
@@ -151,12 +159,7 @@ struct SensoryMapView: View {
                     .foregroundStyle(Color.calmInk)
             }
             Button {
-                withAnimation(.spring(duration: 0.4)) {
-                    hasSeenIntro = true
-                }
-                if model.updatedAt == nil, !model.isLoading, model.errorMessage != nil {
-                    presentLoadError()
-                }
+                Task { await revealMap() }
             } label: {
                 Label("무던한 곳 보기", systemImage: "map")
             }
@@ -165,6 +168,21 @@ struct SensoryMapView: View {
         .calmCard()
         .padding(.horizontal)
         .padding(.bottom, 16)
+    }
+
+    private func revealMap() async {
+        withAnimation(.easeIn(duration: 0.25)) {
+            veilOpacity = 1
+        }
+        try? await Task.sleep(for: .milliseconds(250))
+        hasSeenIntro = true
+        try? await Task.sleep(for: .milliseconds(60))
+        withAnimation(.easeOut(duration: 0.5)) {
+            veilOpacity = 0
+        }
+        if model.updatedAt == nil, !model.isLoading, model.errorMessage != nil {
+            presentLoadError()
+        }
     }
 
     private func refresh(announce: Bool) async {
