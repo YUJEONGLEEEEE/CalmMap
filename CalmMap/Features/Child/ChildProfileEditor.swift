@@ -86,7 +86,7 @@ struct ChildProfileEditor: View {
             }
             .scrollContentBackground(.hidden)
             .background(CalmBackdrop())
-            .navigationTitle(child == nil ? "아이 프로필 만들기" : "프로필 수정")
+            .navigationTitle(child == nil ? "프로필 만들기" : "프로필 수정")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
