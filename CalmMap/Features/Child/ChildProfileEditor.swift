@@ -15,7 +15,7 @@ struct ChildProfileEditor: View {
     @State private var brightLight = false
     @State private var flicker = false
     @State private var note = ""
-    @State private var confirmingDelete = false
+    @State private var sheetAlerts = AlertCenter()
     @State private var originalName = ""
 
     private static let nameLimit = 10
@@ -93,7 +93,7 @@ struct ChildProfileEditor: View {
                 if child != nil {
                     Section {
                         Button("프로필 삭제", role: .destructive) {
-                            confirmingDelete = true
+                            confirmDelete()
                         }
                     }
                 }
@@ -111,12 +111,22 @@ struct ChildProfileEditor: View {
                         .disabled(trimmedName.isEmpty)
                 }
             }
-            .confirmationDialog("\(originalName) 프로필을 삭제할까요?", isPresented: $confirmingDelete, titleVisibility: .visible) {
-                Button("삭제", role: .destructive) { delete() }
-            } message: {
-                Text("지도는 일반 기준으로 돌아가요.")
-            }
             .onAppear(perform: load)
+        }
+        .calmAlertOverlay()
+        .environment(sheetAlerts)
+    }
+
+    private func confirmDelete() {
+        sheetAlerts.present(
+            systemImage: "trash",
+            title: "\(originalName) 프로필을 삭제할까요?",
+            message: "지도는 일반 기준으로 돌아가요.",
+            cancelTitle: "취소",
+            actionTitle: "삭제",
+            isDestructive: true
+        ) {
+            delete()
         }
     }
 

@@ -87,6 +87,7 @@ struct CalmGlass<S: InsettableShape>: ViewModifier {
 }
 
 struct CalmPrimaryButtonStyle: ButtonStyle {
+    var fill: Color = .calmInk
     @Environment(\.isEnabled) private var isEnabled
 
     func makeBody(configuration: Configuration) -> some View {
@@ -96,7 +97,7 @@ struct CalmPrimaryButtonStyle: ButtonStyle {
             .frame(maxWidth: .infinity, minHeight: 52)
             .background {
                 Capsule()
-                    .fill(Color.calmInk.opacity(0.94))
+                    .fill(fill.opacity(0.94))
                     .overlay(
                         Capsule().fill(
                             LinearGradient(colors: [.white.opacity(0.22), .clear], startPoint: .top, endPoint: .center)
@@ -105,7 +106,7 @@ struct CalmPrimaryButtonStyle: ButtonStyle {
                     .background(.ultraThinMaterial, in: Capsule())
             }
             .overlay(Capsule().strokeBorder(Color.calmGlassEdge, lineWidth: 1))
-            .shadow(color: Color.calmInk.opacity(0.3), radius: 10, y: 4)
+            .shadow(color: fill.opacity(0.3), radius: 10, y: 4)
             .opacity(isEnabled ? (configuration.isPressed ? 0.85 : 1) : 0.4)
     }
 }
@@ -150,6 +151,7 @@ extension View {
 
 extension ButtonStyle where Self == CalmPrimaryButtonStyle {
     static var calmPrimary: CalmPrimaryButtonStyle { CalmPrimaryButtonStyle() }
+    static var calmDestructive: CalmPrimaryButtonStyle { CalmPrimaryButtonStyle(fill: Color(light: 0xD93A30, dark: 0xE5554B)) }
 }
 
 extension ButtonStyle where Self == CalmSecondaryButtonStyle {
