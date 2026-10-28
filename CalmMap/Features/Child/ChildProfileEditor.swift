@@ -18,7 +18,9 @@ struct ChildProfileEditor: View {
     @State private var sheetAlerts = AlertCenter()
     @State private var originalName = ""
 
-    private static let nameLimit = 10
+    private var nameError: String? {
+        NicknameValidator.message(for: name)
+    }
 
     private var trimmedName: String {
         name.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -28,18 +30,27 @@ struct ChildProfileEditor: View {
         NavigationStack {
             Form {
                 Section {
-                    HStack {
-                        TextField("이름 또는 별명", text: $name)
-                            .textInputAutocapitalization(.never)
-                            .onChange(of: name) {
-                                if name.count > Self.nameLimit {
-                                    name = String(name.prefix(Self.nameLimit))
-                                }
-                            }
-                        Text("\(name.count)/\(Self.nameLimit)")
-                            .font(.caption.monospacedDigit())
-                            .foregroundStyle(.secondary)
-                            .accessibilityLabel("\(Self.nameLimit)자 중 \(name.count)자")
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack {
+                            TextField("이름 또는 별명", text: $name)
+                                .textInputAutocapitalization(.never)
+                            Text("\(NicknameValidator.count(name))/\(NicknameValidator.limit)")
+                                .font(.caption.monospacedDigit())
+                                .foregroundStyle(nameError == nil ? Color.secondary : Color.red)
+                                .accessibilityLabel("\(NicknameValidator.limit)자 중 \(NicknameValidator.count(name))자")
+                        }
+                        if let nameError {
+                            Text(nameError)
+                                .font(.caption)
+                                .foregroundStyle(.red)
+                                .transition(.opacity)
+                        }
+                    }
+                    .animation(.easeOut(duration: 0.2), value: nameError)
+                    .onChange(of: nameError) {
+                        if let nameError {
+                            AccessibilityNotification.Announcement(nameError).post()
+                        }
                     }
                 } header: {
                     Text("아이")
@@ -108,7 +119,7 @@ struct ChildProfileEditor: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("저장") { save() }
-                        .disabled(trimmedName.isEmpty)
+                        .disabled(trimmedName.isEmpty || nameError != nil)
                 }
             }
             .onAppear(perform: load)
