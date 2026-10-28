@@ -79,7 +79,7 @@ struct MeasureView: View {
                 adoptRouterPlace()
             }
             .onChange(of: meter.interruptionCount) {
-                toasts.show("다른 소리가 끼어들어 측정이 중단됐어요. 다시 시작해 주세요.", style: .warning, duration: .seconds(4))
+                toasts.show("다른 소리가 끼어들어 측정이 중단됐어요.\n다시 시작해 주세요.", style: .warning, duration: .seconds(4))
             }
             .onChange(of: location.location) {
                 guard place == nil, !useCurrentLocation, let current = location.location else { return }
