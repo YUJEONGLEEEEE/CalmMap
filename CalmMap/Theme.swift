@@ -9,6 +9,7 @@ extension Color {
     static let calmGlassEdge = Color(light: 0xFFFFFF, lightAlpha: 0.7, dark: 0xFFFFFF, darkAlpha: 0.26)
     static let calmGlow = Color(light: 0xFFFFFF, lightAlpha: 0.75, dark: 0xA9C4E2, darkAlpha: 0.35)
     static let calmTint = Color(light: 0x294A6E, lightAlpha: 0.12, dark: 0xA9C4E2, darkAlpha: 0.1)
+    static let calmToast = Color(light: 0xE4EBF4, dark: 0x22344A)
 
     init(hex: UInt32) {
         self.init(light: hex, dark: hex)

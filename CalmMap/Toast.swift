@@ -79,17 +79,18 @@ struct ToastOverlay: ViewModifier {
                                 .font(.subheadline.weight(.bold))
                                 .padding(.horizontal, 11)
                                 .padding(.vertical, 6)
-                                .background(Color.calmOnInk.opacity(0.2), in: Capsule())
+                                .background(Color.calmTint, in: Capsule())
                         }
                         .buttonStyle(.plain)
                     }
                 }
                     .font(.subheadline.weight(.medium))
-                    .foregroundStyle(Color.calmOnInk)
+                    .foregroundStyle(Color.calmInk)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 12)
-                    .background(Color.calmInk.opacity(0.95), in: Capsule())
-                    .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
+                    .background(Color.calmToast, in: Capsule())
+                    .overlay(Capsule().strokeBorder(Color.calmInk.opacity(0.12), lineWidth: 1))
+                    .shadow(color: .black.opacity(0.12), radius: 10, y: 4)
                     .padding(.horizontal, 20)
                     .padding(.bottom, 24)
                     .transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
