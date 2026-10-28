@@ -49,7 +49,7 @@ struct ToastOverlay: ViewModifier {
     @Environment(ToastCenter.self) private var toasts
 
     func body(content: Content) -> some View {
-        content.overlay(alignment: .top) {
+        content.overlay(alignment: .bottom) {
             if let toast = toasts.current {
                 Label(toast.message, systemImage: toast.style.symbolName)
                     .font(.subheadline.weight(.medium))
@@ -59,8 +59,8 @@ struct ToastOverlay: ViewModifier {
                     .background(Color.calmInk.opacity(0.95), in: Capsule())
                     .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
                     .padding(.horizontal, 20)
-                    .padding(.top, 8)
-                    .transition(.move(edge: .top).combined(with: .opacity))
+                    .padding(.bottom, 24)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
                     .onTapGesture { toasts.dismiss() }
                     .accessibilityAddTraits(.isStaticText)
                     .id(toast.id)

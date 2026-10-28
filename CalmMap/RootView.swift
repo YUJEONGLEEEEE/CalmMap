@@ -15,17 +15,19 @@ struct RootView: View {
         @Bindable var router = router
         TabView(selection: $router.selectedTab) {
             SensoryMapView()
+                .toastOverlay()
                 .tabItem { Label("지도", systemImage: "map") }
                 .tag(AppRouter.Tab.map)
             MeasureView()
+                .toastOverlay()
                 .tabItem { Label("측정", systemImage: "waveform") }
                 .tag(AppRouter.Tab.measure)
             ChildHomeView()
+                .toastOverlay()
                 .tabItem { Label("프로필", image: router.selectedTab == .child ? "TabChildFill" : "TabChild") }
                 .tag(AppRouter.Tab.child)
         }
         .tint(Color.calmInk)
-        .toastOverlay()
         .calmAlertOverlay()
         .onChange(of: activeProfile, initial: true) {
             model.apply(profile: activeProfile)
