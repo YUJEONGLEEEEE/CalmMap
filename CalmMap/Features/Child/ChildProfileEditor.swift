@@ -3,7 +3,6 @@ import SwiftUI
 
 struct ChildProfileEditor: View {
     let child: ChildProfile?
-    var onSaved: (ChildProfile) -> Void = { _ in }
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Environment(ToastCenter.self) private var toasts
@@ -149,7 +148,6 @@ struct ChildProfileEditor: View {
         }
         try? modelContext.save()
         toasts.show(child == nil ? "\(trimmedName) 맞춤 지도를 켰어요." : "\(trimmedName) 프로필을 저장했어요.", style: .success)
-        onSaved(target)
         dismiss()
     }
 
