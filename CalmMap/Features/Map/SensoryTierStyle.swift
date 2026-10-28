@@ -30,3 +30,22 @@ struct TierBadge: View {
         .accessibilityLabel(tier.title)
     }
 }
+
+struct MeasuredSpotPin: View {
+    let tier: SensoryTier
+    var size: CGFloat = 22
+
+    var body: some View {
+        let shape = RoundedRectangle(cornerRadius: size * 0.32, style: .continuous)
+        ZStack {
+            shape.fill(Color(.systemBackground))
+            shape.fill(tier.fill)
+            shape.strokeBorder(Color.calmInk, lineWidth: tier == .calm ? 1.5 : 0)
+            Image(systemName: "waveform")
+                .font(.system(size: size * 0.45, weight: .bold))
+                .foregroundStyle(tier.foreground)
+        }
+        .frame(width: size, height: size)
+        .accessibilityLabel("내가 측정한 곳, \(tier.title)")
+    }
+}

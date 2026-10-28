@@ -13,6 +13,9 @@ final class SoundMeasurement {
     var soundScore: Double
     var brightLight: Bool
     var flicker: Bool
+    var latitude: Double?
+    var longitude: Double?
+    var areaName: String?
 
     init(
         placeCode: String,
@@ -23,7 +26,10 @@ final class SoundMeasurement {
         peakDecibels: Double,
         soundScore: Double,
         brightLight: Bool = false,
-        flicker: Bool = false
+        flicker: Bool = false,
+        latitude: Double? = nil,
+        longitude: Double? = nil,
+        areaName: String? = nil
     ) {
         self.id = UUID()
         self.placeCode = placeCode
@@ -35,6 +41,15 @@ final class SoundMeasurement {
         self.soundScore = soundScore
         self.brightLight = brightLight
         self.flicker = flicker
+        self.latitude = latitude
+        self.longitude = longitude
+        self.areaName = areaName
+    }
+
+    static let currentLocationCode = ""
+
+    var isAtCurrentLocation: Bool {
+        placeCode == Self.currentLocationCode
     }
 
     var ratios: [SoundCategory: Double] {

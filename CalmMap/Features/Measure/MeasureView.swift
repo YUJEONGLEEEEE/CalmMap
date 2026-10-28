@@ -13,6 +13,7 @@ struct MeasureView: View {
     @State private var meter = SoundMeter()
     @State private var location = LocationProvider()
     @State private var place: Place?
+    @State private var useCurrentLocation = false
     @State private var showingPlacePicker = false
     @State private var brightLight = false
     @State private var flicker = false
@@ -25,6 +26,9 @@ struct MeasureView: View {
                 VStack(alignment: .leading, spacing: 20) {
                     privacyNote
                     placeSelector
+                    if useCurrentLocation {
+                        soundOnlyNote
+                    }
                     switch meter.state {
                     case .idle, .failed, .denied:
                         startSection
@@ -41,10 +45,21 @@ struct MeasureView: View {
             .background(CalmBackdrop())
             .navigationTitle("소리 측정")
             .sheet(isPresented: $showingPlacePicker) {
-                PlacePickerView(places: places.sorted(near: location.location), location: location.location) { picked in
-                    place = picked
-                    showingPlacePicker = false
-                }
+                PlacePickerView(
+                    places: places.sorted(near: location.location),
+                    location: location.location,
+                    areaName: location.areaName,
+                    onPickCurrentLocation: {
+                        place = nil
+                        useCurrentLocation = true
+                        showingPlacePicker = false
+                    },
+                    onPick: { picked in
+                        place = picked
+                        useCurrentLocation = false
+                        showingPlacePicker = false
+                    }
+                )
             }
             .onAppear {
                 location.requestOnce()
@@ -53,13 +68,18 @@ struct MeasureView: View {
             .onChange(of: router.measurePlace) {
                 adoptRouterPlace()
             }
+            .onChange(of: router.measureAtCurrentLocation) {
+                adoptRouterPlace()
+            }
             .onChange(of: meter.interruptionCount) {
                 toasts.show("다른 소리가 끼어들어 측정이 중단됐어요. 다시 시작해 주세요.", style: .warning, duration: .seconds(4))
             }
             .onChange(of: location.location) {
-                guard place == nil, let current = location.location else { return }
+                guard place == nil, !useCurrentLocation, let current = location.location else { return }
                 if let nearest = places.sorted(near: current).first, nearest.isNearby(current) {
                     place = nearest
+                } else {
+                    useCurrentLocation = true
                 }
             }
         }
@@ -81,14 +101,15 @@ struct MeasureView: View {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("측정 장소").font(.caption).foregroundStyle(.secondary)
-                    Text(place?.name ?? "장소를 골라 주세요").font(.headline)
-                    if let current = location.location {
-                        if let place {
+                    if useCurrentLocation {
+                        Text("현재 위치").font(.headline)
+                        Label(location.areaName ?? (location.location == nil ? "위치를 확인하고 있어요" : "현재 위치"), systemImage: "location")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    } else {
+                        Text(place?.name ?? "장소를 골라 주세요").font(.headline)
+                        if let place, let current = location.location {
                             Label("현재 위치에서 \(place.distance(from: current).shortText)", systemImage: "location")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        } else {
-                            Label("근처 500m 안에 실시간 데이터 장소가 없어요", systemImage: "location")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
@@ -117,8 +138,26 @@ struct MeasureView: View {
                 Label("측정 시작", systemImage: "waveform")
             }
             .buttonStyle(.calmPrimary)
-            .disabled(place == nil)
+            .disabled(!canMeasure)
         }
+    }
+
+    private var canMeasure: Bool {
+        place != nil || (useCurrentLocation && location.location != nil)
+    }
+
+    private var soundOnlyNote: some View {
+        Label {
+            Text("근처에 실시간 데이터 장소가 없어서 소리만 기록해요. 서울 121곳 근처에서는 사람 붐빔까지 함께 계산해요.")
+                .font(.footnote)
+        } icon: {
+            Image(systemName: "info.circle")
+                .foregroundStyle(Color.calmInk)
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.calmTint, in: RoundedRectangle(cornerRadius: 16))
+        .calmGlass(RoundedRectangle(cornerRadius: 16))
     }
 
     private func startMeasuring() async {
@@ -219,9 +258,10 @@ struct MeasureView: View {
     }
 
     private func save(_ summary: SoundMeter.Summary) {
-        guard let place else { return }
+        let current = location.location
+        guard place != nil || (useCurrentLocation && current != nil) else { return }
         let measurement = SoundMeasurement(
-            placeCode: place.code,
+            placeCode: useCurrentLocation ? SoundMeasurement.currentLocationCode : place?.code ?? "",
             measuredAt: Date(),
             durationSeconds: summary.durationSeconds,
             ratios: summary.ratios,
@@ -229,11 +269,18 @@ struct MeasureView: View {
             peakDecibels: summary.peakDecibels,
             soundScore: summary.soundScore,
             brightLight: brightLight,
-            flicker: flicker
+            flicker: flicker,
+            latitude: useCurrentLocation ? current?.coordinate.latitude : nil,
+            longitude: useCurrentLocation ? current?.coordinate.longitude : nil,
+            areaName: useCurrentLocation ? location.areaName : nil
         )
         modelContext.insert(measurement)
         try? modelContext.save()
-        toasts.show("\(place.name)에 저장했어요. 지도에 반영됐어요.", style: .success)
+        if useCurrentLocation {
+            toasts.show("현재 위치에 저장했어요. 지도에 표시됐어요.", style: .success)
+        } else if let place {
+            toasts.show("\(place.name)에 저장했어요. 지도에 반영됐어요.", style: .success)
+        }
         brightLight = false
         flicker = false
         meter.reset()
@@ -242,7 +289,14 @@ struct MeasureView: View {
     private func adoptRouterPlace() {
         if let pending = router.measurePlace {
             place = pending
+            useCurrentLocation = false
             router.measurePlace = nil
+        }
+        if router.measureAtCurrentLocation {
+            place = nil
+            useCurrentLocation = true
+            router.measureAtCurrentLocation = false
+            location.requestOnce()
         }
     }
 }
@@ -266,6 +320,8 @@ struct FlowTags: View {
 struct PlacePickerView: View {
     let places: [Place]
     let location: CLLocation?
+    let areaName: String?
+    let onPickCurrentLocation: () -> Void
     let onPick: (Place) -> Void
     @State private var query = ""
 
@@ -275,28 +331,56 @@ struct PlacePickerView: View {
 
     var body: some View {
         NavigationStack {
-            List(filtered) { place in
-                Button {
-                    onPick(place)
-                } label: {
-                    HStack {
-                        VStack(alignment: .leading) {
-                            Text(place.name)
-                            Text(place.category).font(.caption).foregroundStyle(.secondary)
-                        }
-                        Spacer()
-                        if let location {
-                            Text(place.distance(from: location).shortText)
-                                .font(.subheadline.monospacedDigit())
-                                .foregroundStyle(.secondary)
+            List {
+                if location != nil, query.isEmpty {
+                    Section {
+                        Button(action: onPickCurrentLocation) {
+                            HStack(spacing: 12) {
+                                Image(systemName: "location.fill")
+                                    .font(.subheadline)
+                                    .foregroundStyle(Color.calmInk)
+                                    .frame(width: 30, height: 30)
+                                    .background(Color.calmTint, in: Circle())
+                                VStack(alignment: .leading) {
+                                    Text("현재 위치에서 측정")
+                                        .foregroundStyle(Color.calmInk)
+                                    Text("\(areaName ?? "현재 위치") · 소리만 기록돼요")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
                         }
                     }
                 }
-                .foregroundStyle(.primary)
+                Section(location == nil ? "실시간 데이터 장소" : "실시간 데이터 장소 · 가까운 순") {
+                    ForEach(filtered) { place in
+                        placeRow(place)
+                    }
+                }
             }
             .searchable(text: $query, prompt: "장소 이름")
             .navigationTitle("측정 장소")
             .navigationBarTitleDisplayMode(.inline)
         }
+    }
+
+    private func placeRow(_ place: Place) -> some View {
+        Button {
+            onPick(place)
+        } label: {
+            HStack {
+                VStack(alignment: .leading) {
+                    Text(place.name)
+                    Text(place.category).font(.caption).foregroundStyle(.secondary)
+                }
+                Spacer()
+                if let location {
+                    Text(place.distance(from: location).shortText)
+                        .font(.subheadline.monospacedDigit())
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+        .foregroundStyle(.primary)
     }
 }

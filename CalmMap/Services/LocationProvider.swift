@@ -4,8 +4,10 @@ import Observation
 @Observable
 final class LocationProvider: NSObject, CLLocationManagerDelegate {
     private(set) var location: CLLocation?
+    private(set) var areaName: String?
     private(set) var authorization: CLAuthorizationStatus
     private let manager = CLLocationManager()
+    private let geocoder = CLGeocoder()
 
     override init() {
         authorization = manager.authorizationStatus
@@ -37,7 +39,24 @@ final class LocationProvider: NSObject, CLLocationManagerDelegate {
 
     nonisolated func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         let latest = locations.last
-        Task { @MainActor in self.location = latest }
+        Task { @MainActor in
+            self.location = latest
+            self.resolveArea(of: latest)
+        }
+    }
+
+    private func resolveArea(of location: CLLocation?) {
+        guard let location else { return }
+        geocoder.cancelGeocode()
+        geocoder.reverseGeocodeLocation(location, preferredLocale: Locale(identifier: "ko_KR")) { [weak self] placemarks, _ in
+            guard let self, let mark = placemarks?.first else { return }
+            var parts: [String] = []
+            for case let part? in [mark.administrativeArea, mark.locality, mark.subLocality] where !parts.contains(part) {
+                parts.append(part)
+            }
+            let name = parts.isEmpty ? nil : parts.joined(separator: " ")
+            Task { @MainActor in self.areaName = name }
+        }
     }
 
     nonisolated func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {}

@@ -10,9 +10,16 @@ final class AppRouter {
 
     var selectedTab: Tab = .map
     var measurePlace: Place?
+    var measureAtCurrentLocation = false
 
     func measure(at place: Place) {
         measurePlace = place
+        selectedTab = .measure
+    }
+
+    func measureHere() {
+        measurePlace = nil
+        measureAtCurrentLocation = true
         selectedTab = .measure
     }
 }
