@@ -34,14 +34,14 @@ struct StepSlider<Value: Hashable>: View {
                 }
                 .frame(maxHeight: .infinity)
                 .contentShape(Rectangle())
-                .gesture(
-                    DragGesture(minimumDistance: 0)
+                .onTapGesture(coordinateSpace: .local) { location in
+                    select(at: location.x, travel: travel)
+                }
+                .highPriorityGesture(
+                    DragGesture(minimumDistance: 8)
                         .onChanged { value in
-                            let raw = (value.location.x - thumbWidth / 2) / travel
-                            let step = Int((min(max(raw, 0), 1) * CGFloat(options.count - 1)).rounded())
-                            if options[step] != selection {
-                                selection = options[step]
-                            }
+                            guard abs(value.translation.width) > abs(value.translation.height) else { return }
+                            select(at: value.location.x, travel: travel)
                         }
                 )
             }
@@ -60,7 +60,7 @@ struct StepSlider<Value: Hashable>: View {
             }
             .frame(height: 4)
 
-            ZStack {
+            HStack(alignment: .top, spacing: 4) {
                 ForEach(options.indices, id: \.self) { position in
                     Button {
                         selection = options[position]
@@ -68,6 +68,9 @@ struct StepSlider<Value: Hashable>: View {
                         Text(label(options[position]))
                             .font(.footnote.weight(position == index ? .semibold : .medium))
                             .foregroundStyle(position == index ? Color.primary : Color.secondary)
+                            .multilineTextAlignment(textAlignment(for: position))
+                            .lineLimit(2)
+                            .minimumScaleFactor(0.8)
                     }
                     .buttonStyle(.plain)
                     .frame(maxWidth: .infinity, alignment: alignment(for: position))
@@ -89,6 +92,20 @@ struct StepSlider<Value: Hashable>: View {
                 break
             }
         }
+    }
+
+    private func select(at x: CGFloat, travel: CGFloat) {
+        let raw = (x - thumbWidth / 2) / travel
+        let step = Int((min(max(raw, 0), 1) * CGFloat(options.count - 1)).rounded())
+        if options[step] != selection {
+            selection = options[step]
+        }
+    }
+
+    private func textAlignment(for position: Int) -> TextAlignment {
+        if position == 0 { return .leading }
+        if position == options.count - 1 { return .trailing }
+        return .center
     }
 
     private func alignment(for position: Int) -> Alignment {

@@ -113,7 +113,9 @@ enum PersonalAdjuster {
 
 extension String {
     var hasFinalConsonant: Bool {
-        guard let scalar = unicodeScalars.last else { return false }
+        let closers = CharacterSet(charactersIn: ")]}>\"'”’").union(.whitespacesAndNewlines)
+        let base = precomposedStringWithCanonicalMapping.trimmingCharacters(in: closers)
+        guard let scalar = base.unicodeScalars.last else { return false }
         if (0xAC00...0xD7A3).contains(scalar.value) {
             return (scalar.value - 0xAC00) % 28 != 0
         }

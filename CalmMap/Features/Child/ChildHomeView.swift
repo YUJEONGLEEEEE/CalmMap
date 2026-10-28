@@ -11,12 +11,12 @@ struct ChildHomeView: View {
 
     private enum EditorTarget: Identifiable {
         case new
-        case edit(ChildProfile)
+        case edit(ChildProfile, id: UUID)
 
         var id: String {
             switch self {
             case .new: "new"
-            case .edit(let child): child.id.uuidString
+            case .edit(_, let id): id.uuidString
             }
         }
     }
@@ -79,7 +79,7 @@ struct ChildHomeView: View {
             .sheet(item: $editing) { target in
                 switch target {
                 case .new: ChildProfileEditor(child: nil)
-                case .edit(let child): ChildProfileEditor(child: child)
+                case .edit(let child, _): ChildProfileEditor(child: child)
                 }
             }
             .sheet(item: $selectedPlace) { entry in
@@ -179,7 +179,7 @@ struct ChildHomeView: View {
                 }
                 Spacer()
                 Button {
-                    editing = .edit(child)
+                    editing = .edit(child, id: child.id)
                 } label: {
                     Text("수정")
                         .font(.caption)
@@ -209,19 +209,29 @@ struct ChildHomeView: View {
     @ViewBuilder
     private func recommendations(for child: ChildProfile) -> some View {
         if rated.isEmpty {
-            let failed = !model.isLoading && model.errorMessage != nil
-            VStack(alignment: .leading, spacing: 8) {
-                Text(failed ? "장소 정보를 불러오지 못했어요" : "장소 정보를 불러오는 중이에요")
-                    .font(.headline)
-                Text(failed ? "인터넷 연결을 확인하고 지도 탭에서 새로고침해 주세요." : "지도 탭에서 새로고침하면 추천이 나타나요.")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+            if model.isLoading {
+                HStack(spacing: 10) {
+                    ProgressView()
+                    Text("장소 정보를 불러오는 중이에요")
+                        .font(.headline)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .calmCard()
+            } else {
+                let failed = model.errorMessage != nil
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(failed ? "장소 정보를 불러오지 못했어요" : "아직 장소 정보가 없어요")
+                        .font(.headline)
+                    Text(failed ? "인터넷 연결을 확인하고 지도 탭에서 새로고침해 주세요." : "지도 탭에서 새로고침하면 추천이 나타나요.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+                .calmCard()
             }
-            .calmCard()
         } else {
             placeSection(
                 title: "지금 \(child.name)에게 무던한 곳",
-                empty: "지금은 무던한 곳이 없어요. 장소를 눌러 덜 붐비는 시간을 확인해 보세요.",
+                empty: "지금은 무던한 곳이 없어요. 지도에서 장소를 눌러 덜 붐비는 시간을 확인해 보세요.",
                 entries: calmPicks
             )
             if !avoidPicks.isEmpty {
@@ -231,7 +241,7 @@ struct ChildHomeView: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Label("\(child.name) 기준으로 더 버거워진 곳 \(shifted.count)곳", systemImage: "arrow.up.right")
                         .font(.headline)
-                    Text("일반 지도에서는 한 단계 낮게 보이지만, \(child.name.particle("이", "가")) 힘들어하는 요소 때문에 점수가 올라간 곳이에요. 지도에서 바로 확인할 수 있어요.")
+                    Text("일반 지도에서는 더 낮게 보이지만, \(child.name.particle("이", "가")) 힘들어하는 요소 때문에 점수가 올라간 곳이에요. 지도에서 바로 확인할 수 있어요.")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                     Button("지도에서 보기") {
@@ -274,6 +284,7 @@ struct ChildHomeView: View {
         HStack(spacing: 12) {
             if let reading = entry.reading {
                 TierBadge(tier: reading.tier, size: 28)
+                    .accessibilityHidden(true)
             }
             VStack(alignment: .leading, spacing: 2) {
                 Text(entry.place.name)
@@ -292,6 +303,8 @@ struct ChildHomeView: View {
         }
         .padding(.vertical, 8)
         .contentShape(Rectangle())
+        .accessibilityElement(children: .combine)
+        .accessibilityValue(entry.reading.map { "\($0.tier.title), 감각부하 \(Int($0.score.rounded()))" } ?? "")
     }
 
     private func score(_ entry: SensoryMapModel.Entry) -> Double {
@@ -330,7 +343,7 @@ struct ChipLayout: Layout {
         for row in arrange(width: bounds.width, subviews: subviews) {
             var x = bounds.minX
             for index in row.indices {
-                let size = subviews[index].sizeThatFits(.unspecified)
+                let size = fittedSize(subviews[index], width: bounds.width)
                 subviews[index].place(at: CGPoint(x: x, y: y), proposal: ProposedViewSize(size))
                 x += size.width + spacing
             }
@@ -338,11 +351,17 @@ struct ChipLayout: Layout {
         }
     }
 
+    private func fittedSize(_ subview: LayoutSubview, width: CGFloat) -> CGSize {
+        let ideal = subview.sizeThatFits(.unspecified)
+        guard ideal.width > width, width.isFinite else { return ideal }
+        return subview.sizeThatFits(ProposedViewSize(width: width, height: nil))
+    }
+
     private func arrange(width: CGFloat, subviews: Subviews) -> [(indices: [Int], width: CGFloat, height: CGFloat)] {
         var rows: [(indices: [Int], width: CGFloat, height: CGFloat)] = []
         var current: (indices: [Int], width: CGFloat, height: CGFloat) = ([], 0, 0)
         for index in subviews.indices {
-            let size = subviews[index].sizeThatFits(.unspecified)
+            let size = fittedSize(subviews[index], width: width)
             let needed = current.indices.isEmpty ? size.width : current.width + spacing + size.width
             if needed > width && !current.indices.isEmpty {
                 rows.append(current)

@@ -35,7 +35,10 @@ final class ToastCenter {
         let toast = Toast(message: message, style: style, actionTitle: actionTitle, action: action)
         current = toast
         let spoken = actionTitle.map { "\(message). \($0) 버튼이 있어요." } ?? message
-        AccessibilityNotification.Announcement(spoken).post()
+        Task {
+            try? await Task.sleep(for: .milliseconds(600))
+            AccessibilityNotification.Announcement(spoken).post()
+        }
         let visible = UIAccessibility.isVoiceOverRunning ? max(duration, .seconds(8)) : duration
         dismissTask?.cancel()
         dismissTask = Task { [weak self] in
@@ -88,8 +91,8 @@ struct ToastOverlay: ViewModifier {
                     .foregroundStyle(Color.calmInk)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 12)
-                    .background(Color.calmToast, in: Capsule())
-                    .overlay(Capsule().strokeBorder(Color.calmInk.opacity(0.12), lineWidth: 1))
+                    .background(Color.calmToast, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).strokeBorder(Color.calmInk.opacity(0.12), lineWidth: 1))
                     .shadow(color: .black.opacity(0.12), radius: 10, y: 4)
                     .padding(.horizontal, 20)
                     .padding(.bottom, 24)
