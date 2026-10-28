@@ -138,7 +138,7 @@ enum CalmWindowAdvisor {
             return "지금은 무던한 편이에요."
         }
         guard !hourly.isEmpty else {
-            return "지금은 시간대별 예보를 볼 수 없어요."
+            return "이곳은 지금 시간대별 예보가 없어 덜 붐비는 시간을 알려 드리기 어려워요."
         }
         guard let firstCalm = hourly.first(where: { $0.reading.tier == .calm }) else {
             if let best = hourly.min(by: { $0.reading.score < $1.reading.score }), best.reading.score < current.score {
@@ -150,7 +150,7 @@ enum CalmWindowAdvisor {
     }
 
     private static func hourText(_ date: Date, calendar: Calendar) -> String {
-        "\(calendar.component(.hour, from: date))시"
+        date.seoulHourText
     }
 
     private static func dayPrefix(_ date: Date, calendar: Calendar) -> String {
@@ -173,5 +173,17 @@ extension TimeZone {
 extension Date {
     var seoulTimeText: String {
         formatted(Date.FormatStyle(date: .omitted, time: .shortened, timeZone: .seoul))
+    }
+
+    var seoulStampText: String {
+        guard !Calendar.seoul.isDateInToday(self) else { return seoulTimeText }
+        let day = formatted(Date.FormatStyle(timeZone: .seoul).month(.defaultDigits).day())
+        return "\(day) \(seoulTimeText)"
+    }
+
+    var seoulHourText: String {
+        let hour = Calendar.seoul.component(.hour, from: self)
+        let display = hour % 12 == 0 ? 12 : hour % 12
+        return "\(hour < 12 ? "오전" : "오후") \(display)시"
     }
 }

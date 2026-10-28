@@ -9,6 +9,7 @@ struct MeasuredSpotView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @State private var sheetAlerts = AlertCenter()
+    @State private var isClosing = false
 
     private var spot: MeasuredSpot? {
         model.spot(id: spotID)
@@ -37,7 +38,7 @@ struct MeasuredSpotView: View {
                         }
                         .font(.subheadline)
                         .frame(maxWidth: .infinity)
-                    } else {
+                    } else if !isClosing {
                         ContentUnavailableView("측정 기록이 없어요", systemImage: "waveform")
                     }
                     Text("측정 기록은 이 기기에만 저장되고, 위치는 지도 표시에만 써요.")
@@ -71,7 +72,7 @@ struct MeasuredSpotView: View {
         HStack(spacing: 14) {
             MeasuredSpotPin(tier: spot.tier, size: 52)
             VStack(alignment: .leading, spacing: 4) {
-                Text("측정 당시 \(spot.tier.title)")
+                Text("측정 당시 소리 \(spot.tier.soundTitle)")
                     .font(.title2.bold())
                 Text(spot.areaName ?? "현재 위치")
                     .font(.subheadline)
@@ -126,13 +127,14 @@ struct MeasuredSpotView: View {
 
     private func history(_ spot: MeasuredSpot) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("측정 기록 \(spot.measurements.count)회")
+            Text("측정 기록 \(spot.measurements.count)개")
                 .font(.headline)
                 .padding(.bottom, 6)
             ForEach(spot.measurements) { measurement in
                 let score = measurement.soundScore * 100
                 HStack(spacing: 12) {
                     MeasuredSpotPin(tier: SensoryTier(score: score), size: 24)
+                        .accessibilityHidden(true)
                     Text(measurement.measuredAt.formatted(.dateTime.month().day().weekday(.abbreviated).hour().minute()))
                         .font(.subheadline.weight(.medium))
                     Spacer()
@@ -141,6 +143,8 @@ struct MeasuredSpotView: View {
                         .foregroundStyle(.secondary)
                 }
                 .padding(.vertical, 8)
+                .accessibilityElement(children: .combine)
+                .accessibilityValue("소리 \(SensoryTier(score: score).soundTitle)")
                 if measurement.id != spot.measurements.last?.id {
                     Divider()
                 }
@@ -150,11 +154,19 @@ struct MeasuredSpotView: View {
 
     private func delete() {
         guard let spot else { return }
-        for measurement in spot.measurements {
+        let targets = spot.measurements
+        isClosing = true
+        model.forget(measurementIDs: Set(targets.map(\.id)))
+        dismiss()
+        for measurement in targets {
             modelContext.delete(measurement)
         }
-        try? modelContext.save()
-        toasts.show("측정 기록을 삭제했어요.")
-        dismiss()
+        do {
+            try modelContext.save()
+            toasts.show("측정 기록을 삭제했어요.")
+        } catch {
+            modelContext.rollback()
+            toasts.show("삭제하지 못했어요. 다시 시도해 주세요.", style: .warning)
+        }
     }
 }

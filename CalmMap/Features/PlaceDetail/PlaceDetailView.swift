@@ -40,6 +40,13 @@ struct PlaceDetailView: View {
                         }
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 60)
+                    } else if entry != nil, model.updatedAt != nil {
+                        ContentUnavailableView(
+                            "지금은 실시간 정보가 없어요",
+                            systemImage: "clock.badge.questionmark",
+                            description: Text("이 장소는 서울시 실시간 데이터가 잠시 들어오지 않고 있어요. 직접 측정한 소리는 기록할 수 있어요.")
+                        )
+                        measureButton
                     } else {
                         ContentUnavailableView(
                             "데이터를 불러오지 못했어요",
@@ -73,6 +80,7 @@ struct PlaceDetailView: View {
     private func summary(reading: SensoryReading, live: LivePlace) -> some View {
         HStack(spacing: 14) {
             TierBadge(tier: reading.tier, size: 52)
+                .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 4) {
                 Text("지금 \(reading.tier.title)")
                     .font(.title2.bold())
@@ -163,6 +171,8 @@ struct PlaceDetailView: View {
                     y: .value("감각부하", item.reading.score)
                 )
                 .foregroundStyle(item.reading.tier.fill)
+                .accessibilityLabel(item.date.seoulHourText)
+                .accessibilityValue("\(item.reading.tier.title), 감각부하 \(Int(item.reading.score.rounded()))")
                 .annotation(position: .top, spacing: 2) {
                     Image(systemName: item.reading.tier.symbolName)
                         .font(.system(size: 8))
@@ -224,5 +234,8 @@ struct PlaceDetailView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(title)
+        .accessibilityValue("\(Int((value * 100).rounded())), \(detail)")
     }
 }

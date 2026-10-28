@@ -147,6 +147,7 @@ extension View {
         self
             .presentationDetents([.medium, .large])
             .presentationBackground { CalmBackdrop() }
+            .toastOverlay()
     }
 }
 

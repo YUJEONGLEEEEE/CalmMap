@@ -30,6 +30,8 @@ final class SensoryMapModel {
         self.entries = places.map { Entry(place: $0, live: nil, reading: nil) }
     }
 
+    static let liveMaxAge: TimeInterval = 2 * 60 * 60
+
     enum RefreshResult {
         case loaded
         case failed
@@ -43,8 +45,12 @@ final class SensoryMapModel {
         defer { isLoading = false }
         do {
             snapshot = try await client.fetchSnapshot()
-            fetchedAt = Date()
             rebuild()
+            guard updatedAt != nil else {
+                errorMessage = "no live data"
+                return .failed
+            }
+            fetchedAt = Date()
             errorMessage = nil
             return .loaded
         } catch let error where Self.isCancellation(error) {
@@ -63,6 +69,10 @@ final class SensoryMapModel {
         self.measurements = measurements
         spots = MeasuredSpot.group(measurements)
         rebuild()
+    }
+
+    func forget(measurementIDs ids: Set<UUID>) {
+        apply(measurements: measurements.filter { !ids.contains($0.id) })
     }
 
     func spot(id: UUID) -> MeasuredSpot? {
@@ -108,7 +118,7 @@ final class SensoryMapModel {
         guard let snapshot else { return }
         let now = Date()
         entries = places.map { place in
-            guard let live = snapshot.places[place.code] else {
+            guard let live = snapshot.places[place.code], Self.isFresh(live, now: now) else {
                 return Entry(place: place, live: nil, reading: nil)
             }
             let reading = SensoryIndex.reading(
@@ -121,6 +131,11 @@ final class SensoryMapModel {
             return Entry(place: place, live: live, reading: reading)
         }
         updatedAt = entries.compactMap { $0.live?.observedDate }.max()
+    }
+
+    private static func isFresh(_ live: LivePlace, now: Date) -> Bool {
+        guard let observed = live.observedDate else { return true }
+        return now.timeIntervalSince(observed) <= liveMaxAge
     }
 
     func count(of tier: SensoryTier) -> Int {
