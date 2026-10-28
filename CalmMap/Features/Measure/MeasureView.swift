@@ -11,6 +11,8 @@ struct MeasureView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.openURL) private var openURL
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var stoppedInBackground = false
     @State private var meter = SoundMeter()
     @State private var location = LocationProvider()
     @State private var place: Place?
@@ -79,7 +81,16 @@ struct MeasureView: View {
                 adoptRouterPlace()
             }
             .onChange(of: meter.interruptionCount) {
-                toasts.show("다른 소리가 끼어들어 측정이 중단됐어요.\n다시 시작해 주세요.", style: .warning, duration: .seconds(4))
+                toasts.show("전화나 다른 앱 소리 때문에 측정이 멈췄어요.\n다시 시작해 주세요.", style: .warning, duration: .seconds(4))
+            }
+            .onChange(of: scenePhase) {
+                if scenePhase == .background, meter.state == .measuring {
+                    meter.cancel()
+                    stoppedInBackground = true
+                } else if scenePhase == .active, stoppedInBackground {
+                    stoppedInBackground = false
+                    toasts.show("앱을 나가서 측정을 멈췄어요.\n다시 시작해 주세요.", style: .warning, duration: .seconds(4))
+                }
             }
             .onChange(of: location.location) {
                 guard place == nil, !useCurrentLocation, let current = location.location else { return }

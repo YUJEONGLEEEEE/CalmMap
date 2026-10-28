@@ -251,6 +251,9 @@ struct SensoryMapView: View {
             let spot = model.spot(id: id)
             coordinate = spot?.coordinate
             selectedSpot = spot
+            if spot == nil {
+                toasts.show("측정 기록을 찾을 수 없어요. 이미 삭제됐을 수 있어요.")
+            }
         }
         if let coordinate {
             withAnimation(.easeInOut(duration: 0.4)) {
