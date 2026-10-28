@@ -168,7 +168,11 @@ struct SensoryMapView: View {
                 .font(.footnote)
                 .foregroundStyle(.secondary)
             if !model.profile.isGeneral {
-                Label("\(model.profile.displayName) 기준으로 계산해요", systemImage: "figure.and.child.holdinghands")
+                Label {
+                    Text("\(model.profile.displayName) 기준으로 계산해요")
+                } icon: {
+                    childIcon
+                }
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(Color.calmInk)
             }
@@ -182,6 +186,14 @@ struct SensoryMapView: View {
         .calmCard()
         .padding(.horizontal)
         .padding(.bottom, 16)
+    }
+
+    private var childIcon: some View {
+        Image("ChildChip")
+            .resizable()
+            .renderingMode(.template)
+            .scaledToFit()
+            .frame(width: 14, height: 14)
     }
 
     private var locateButton: some View {
@@ -325,7 +337,11 @@ struct SensoryMapView: View {
                     .foregroundStyle(.secondary)
             }
             if !model.profile.isGeneral {
-                Label("\(model.profile.displayName) 맞춤 지도", systemImage: "figure.and.child.holdinghands")
+                Label {
+                    Text("\(model.profile.displayName) 맞춤 지도")
+                } icon: {
+                    childIcon
+                }
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(Color.calmInk)
             }
