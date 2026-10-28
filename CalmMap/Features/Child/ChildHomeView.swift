@@ -124,7 +124,7 @@ struct ChildHomeView: View {
                 }
                 ForEach(children) { child in
                     let isOn = child.id == activeChild?.id
-                    chip(title: child.name, icon: Image(isOn ? "TabChildFill" : "TabChild"), isOn: isOn) {
+                    chip(title: child.name, icon: Image(isOn ? "ChildChipFill" : "ChildChip"), isOn: isOn) {
                         activeChildID = child.id.uuidString
                     }
                 }
