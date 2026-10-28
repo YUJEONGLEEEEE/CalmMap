@@ -8,7 +8,7 @@ struct MeasuredSpotView: View {
     @Environment(ToastCenter.self) private var toasts
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
-    @State private var confirmingDelete = false
+    @State private var sheetAlerts = AlertCenter()
 
     private var spot: MeasuredSpot? {
         model.spot(id: spotID)
@@ -33,7 +33,7 @@ struct MeasuredSpotView: View {
                         }
                         .buttonStyle(.calmPrimary)
                         Button("이 측정 기록 삭제", role: .destructive) {
-                            confirmingDelete = true
+                            confirmDelete(count: spot.measurements.count)
                         }
                         .font(.subheadline)
                         .frame(maxWidth: .infinity)
@@ -49,15 +49,21 @@ struct MeasuredSpotView: View {
             .background(CalmBackdrop())
             .navigationTitle("내가 측정한 곳")
             .navigationBarTitleDisplayMode(.inline)
-            .confirmationDialog(
-                "이곳의 측정 기록 \(spot?.measurements.count ?? 0)개를 삭제할까요?",
-                isPresented: $confirmingDelete,
-                titleVisibility: .visible
-            ) {
-                Button("삭제", role: .destructive) { delete() }
-            } message: {
-                Text("지도에서 이 핀이 사라져요.")
-            }
+        }
+        .calmAlertOverlay()
+        .environment(sheetAlerts)
+    }
+
+    private func confirmDelete(count: Int) {
+        sheetAlerts.present(
+            systemImage: "trash",
+            title: "이곳의 측정 기록 \(count)개를 삭제할까요?",
+            message: "지도에서 이 핀이 사라져요.",
+            cancelTitle: "취소",
+            actionTitle: "삭제",
+            isDestructive: true
+        ) {
+            delete()
         }
     }
 

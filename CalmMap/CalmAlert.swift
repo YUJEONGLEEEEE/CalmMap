@@ -10,6 +10,7 @@ final class AlertCenter {
         let message: String
         let cancelTitle: String
         let actionTitle: String
+        let isDestructive: Bool
         let action: () -> Void
     }
 
@@ -21,6 +22,7 @@ final class AlertCenter {
         message: String,
         cancelTitle: String,
         actionTitle: String,
+        isDestructive: Bool = false,
         action: @escaping () -> Void
     ) {
         current = Alert(
@@ -29,6 +31,7 @@ final class AlertCenter {
             message: message,
             cancelTitle: cancelTitle,
             actionTitle: actionTitle,
+            isDestructive: isDestructive,
             action: action
         )
     }
@@ -96,7 +99,7 @@ private struct CalmAlertCard: View {
                     dismiss()
                     alert.action()
                 }
-                .buttonStyle(.calmPrimary)
+                .buttonStyle(alert.isDestructive ? .calmDestructive : .calmPrimary)
             }
         }
         .padding(20)
