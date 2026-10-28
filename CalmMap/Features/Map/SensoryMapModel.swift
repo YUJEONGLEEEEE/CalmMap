@@ -29,20 +29,32 @@ final class SensoryMapModel {
         self.entries = places.map { Entry(place: $0, live: nil, reading: nil) }
     }
 
+    enum RefreshResult {
+        case loaded
+        case failed
+        case skipped
+    }
+
     @discardableResult
-    func refresh() async -> Bool {
-        guard !isLoading else { return false }
+    func refresh() async -> RefreshResult {
+        guard !isLoading else { return .skipped }
         isLoading = true
         defer { isLoading = false }
         do {
             snapshot = try await client.fetchSnapshot()
             rebuild()
             errorMessage = nil
-            return true
+            return .loaded
+        } catch let error where Self.isCancellation(error) {
+            return .skipped
         } catch {
             errorMessage = error.localizedDescription
-            return false
+            return .failed
         }
+    }
+
+    private static func isCancellation(_ error: Error) -> Bool {
+        error is CancellationError || (error as? URLError)?.code == .cancelled
     }
 
     func apply(measurements: [SoundMeasurement]) {
