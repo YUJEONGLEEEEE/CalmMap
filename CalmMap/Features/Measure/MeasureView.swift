@@ -30,7 +30,11 @@ struct MeasureView: View {
                     }
                     placeSelector
                     if useCurrentLocation {
-                        soundOnlyNote
+                        if location.isDenied {
+                            locationDeniedNote
+                        } else {
+                            soundOnlyNote
+                        }
                     }
                     switch meter.state {
                     case .idle, .failed, .denied:
@@ -106,15 +110,21 @@ struct MeasureView: View {
                     Text("측정 장소").font(.caption).foregroundStyle(.secondary)
                     if useCurrentLocation {
                         Text("현재 위치").font(.headline)
-                        Label(location.areaName ?? (location.location == nil ? "위치를 확인하고 있어요" : "현재 위치"), systemImage: "location")
+                        Label(currentLocationText, systemImage: location.isDenied ? "location.slash" : "location")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     } else {
                         Text(place?.name ?? "장소를 골라 주세요").font(.headline)
                         if let place, let current = location.location {
-                            Label("현재 위치에서 \(place.distance(from: current).shortText)", systemImage: "location")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
+                            if place.isNearby(current) {
+                                Label("현재 위치에서 \(place.distance(from: current).shortText)", systemImage: "location")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            } else {
+                                Label("현장에서 \(place.distance(from: current).shortText) 떨어져 있어요 · 현장에서 측정하면 더 정확해요", systemImage: "exclamationmark.triangle")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
                         }
                     }
                 }
@@ -170,6 +180,37 @@ struct MeasureView: View {
 
     private var canMeasure: Bool {
         place != nil || (useCurrentLocation && location.location != nil)
+    }
+
+    private var currentLocationText: String {
+        if location.isDenied { return "위치 권한이 꺼져 있어요" }
+        if let areaName = location.areaName { return areaName }
+        return location.location == nil ? "위치를 확인하고 있어요" : "현재 위치"
+    }
+
+    private var locationDeniedNote: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Label {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("위치 권한이 꺼져 있어요")
+                        .font(.subheadline.weight(.semibold))
+                    Text("설정에서 켜면 현재 위치에서 측정할 수 있어요.")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+            } icon: {
+                Image(systemName: "location.slash")
+                    .foregroundStyle(Color.calmInk)
+            }
+            Button("설정 열기") {
+                if let url = URL(string: UIApplication.openSettingsURLString) {
+                    openURL(url)
+                }
+            }
+            .font(.subheadline.weight(.semibold))
+            .tint(Color.calmInk)
+        }
+        .calmTintCard(padding: 12, cornerRadius: 16)
     }
 
     private var soundOnlyNote: some View {
@@ -414,6 +455,11 @@ struct PlacePickerView: View {
                     ForEach(filtered) { place in
                         placeRow(place)
                     }
+                }
+            }
+            .overlay {
+                if filtered.isEmpty, !query.isEmpty {
+                    ContentUnavailableView.search(text: query)
                 }
             }
             .searchable(text: $query, prompt: "장소 이름")

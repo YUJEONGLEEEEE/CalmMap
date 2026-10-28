@@ -5,6 +5,7 @@ import Observation
 final class LocationProvider: NSObject, CLLocationManagerDelegate {
     private(set) var location: CLLocation?
     private(set) var areaName: String?
+    private(set) var isDenied = false
     private let manager = CLLocationManager()
     private let geocoder = CLGeocoder()
 
@@ -12,6 +13,11 @@ final class LocationProvider: NSObject, CLLocationManagerDelegate {
         super.init()
         manager.delegate = self
         manager.desiredAccuracy = kCLLocationAccuracyHundredMeters
+        isDenied = Self.isDenied(manager.authorizationStatus)
+    }
+
+    private static func isDenied(_ status: CLAuthorizationStatus) -> Bool {
+        status == .denied || status == .restricted
     }
 
     func requestOnce() {
@@ -28,6 +34,7 @@ final class LocationProvider: NSObject, CLLocationManagerDelegate {
     nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         let status = manager.authorizationStatus
         Task { @MainActor in
+            self.isDenied = Self.isDenied(status)
             if status == .authorizedWhenInUse || status == .authorizedAlways {
                 self.manager.requestLocation()
             }
