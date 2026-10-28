@@ -113,8 +113,12 @@ enum PersonalAdjuster {
 
 extension String {
     var hasFinalConsonant: Bool {
-        guard let scalar = unicodeScalars.last, (0xAC00...0xD7A3).contains(scalar.value) else { return false }
-        return (scalar.value - 0xAC00) % 28 != 0
+        guard let scalar = unicodeScalars.last else { return false }
+        if (0xAC00...0xD7A3).contains(scalar.value) {
+            return (scalar.value - 0xAC00) % 28 != 0
+        }
+        let last = Character(scalar).lowercased()
+        return "013678lmn".contains(last)
     }
 
     func particle(_ withConsonant: String, _ withoutConsonant: String) -> String {
