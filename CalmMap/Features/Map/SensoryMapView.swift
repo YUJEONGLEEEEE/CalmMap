@@ -62,11 +62,14 @@ struct SensoryMapView: View {
             }
             .safeAreaInset(edge: .top) {
                 if hasSeenIntro {
-                    VStack(alignment: .trailing, spacing: 6) {
-                        header
-                        locateButton
-                            .padding(.trailing, 10)
-                    }
+                    header
+                }
+            }
+            .overlay(alignment: .bottomTrailing) {
+                if hasSeenIntro {
+                    locateButton
+                        .padding(.trailing, 14)
+                        .padding(.bottom, 88)
                 }
             }
             .safeAreaInset(edge: .bottom) {
@@ -187,10 +190,12 @@ struct SensoryMapView: View {
         } label: {
             Image("LocateMe")
                 .renderingMode(.template)
+                .resizable()
+                .frame(width: 22, height: 22)
                 .foregroundStyle(Color.primary)
-                .frame(width: 32, height: 32)
+                .frame(width: 40, height: 40)
                 .background(Color(.systemBackground), in: Circle())
-                .shadow(color: .black.opacity(0.25), radius: 2)
+                .shadow(color: .black.opacity(0.3), radius: 4, y: 1)
                 .frame(width: 44, height: 44)
                 .contentShape(Rectangle())
         }
