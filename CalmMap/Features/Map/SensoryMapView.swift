@@ -200,7 +200,7 @@ struct SensoryMapView: View {
         alerts.present(
             systemImage: "wifi.exclamationmark",
             title: "데이터를 불러오지 못했어요",
-            message: "인터넷 연결을 확인하고 다시 시도해 주세요. 비행기 모드가 켜져 있다면 꺼 주세요.",
+            message: "인터넷 연결을 확인하고 다시 시도해 주세요.",
             cancelTitle: "닫기",
             actionTitle: "다시 시도"
         ) {

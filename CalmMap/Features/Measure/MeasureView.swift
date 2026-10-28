@@ -86,7 +86,7 @@ struct MeasureView: View {
     }
 
     private var privacyNote: some View {
-        Label("소리는 기기 안에서만 분석해요. 녹음 파일은 저장하거나 전송하지 않아요.", systemImage: "lock.shield")
+        Label("소리는 기기 안에서만 분석해요.\n녹음 파일은 저장하거나 전송하지 않아요.", systemImage: "lock.shield")
             .font(.footnote)
             .foregroundStyle(.secondary)
             .padding(12)
@@ -129,7 +129,7 @@ struct MeasureView: View {
             if case .failed(let message) = meter.state {
                 Text(message).font(.footnote).foregroundStyle(.red)
             }
-            Text("\(Int(SoundMeter.duration))초 동안 주변 소리의 종류와 크기를 살펴요. 폰을 손에 들고 평소처럼 서 있으면 돼요.")
+            Text("\(Int(SoundMeter.duration))초 동안 주변 소리의 종류와 크기를 살펴요.\n폰을 손에 들고 평소처럼 서 있으면 돼요.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
             Button {
@@ -148,7 +148,7 @@ struct MeasureView: View {
 
     private var soundOnlyNote: some View {
         Label {
-            Text("근처에 실시간 데이터 장소가 없어서 소리만 기록해요. 서울 121곳 근처에서는 사람 붐빔까지 함께 계산해요.")
+            Text("근처에 실시간 데이터 장소가 없어서 소리만 기록해요.\n서울 121곳 근처에서는 사람 붐빔까지 함께 계산해요.")
                 .font(.footnote)
         } icon: {
             Image(systemName: "info.circle")
