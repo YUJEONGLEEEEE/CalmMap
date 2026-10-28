@@ -7,12 +7,14 @@ struct SensoryMapView: View {
     @Environment(ToastCenter.self) private var toasts
     @Environment(AlertCenter.self) private var alerts
     @Environment(AppRouter.self) private var router
+    @Environment(\.openURL) private var openURL
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Query(sort: \SoundMeasurement.measuredAt, order: .reverse) private var measurements: [SoundMeasurement]
     @AppStorage("hasSeenMapIntro") private var hasSeenIntro = false
     @State private var selected: SensoryMapModel.Entry?
     @State private var selectedSpot: MeasuredSpot?
     @State private var veilOpacity = 0.0
+    @State private var locator = LocationProvider()
     @State private var position: MapCameraPosition = .region(
         MKCoordinateRegion(
             center: CLLocationCoordinate2D(latitude: 37.5560, longitude: 126.9900),
@@ -23,6 +25,7 @@ struct SensoryMapView: View {
     var body: some View {
         NavigationStack {
             Map(position: $position) {
+                UserAnnotation()
                 if hasSeenIntro {
                     ForEach(model.entries) { entry in
                         Annotation(entry.place.name, coordinate: entry.place.coordinate, anchor: .center) {
@@ -50,7 +53,6 @@ struct SensoryMapView: View {
                 }
             }
             .mapControls {
-                MapUserLocationButton()
                 MapCompass()
             }
             .overlay(alignment: .top) {
@@ -60,7 +62,11 @@ struct SensoryMapView: View {
             }
             .safeAreaInset(edge: .top) {
                 if hasSeenIntro {
-                    header
+                    VStack(alignment: .trailing, spacing: 6) {
+                        header
+                        locateButton
+                            .padding(.trailing, 10)
+                    }
                 }
             }
             .safeAreaInset(edge: .bottom) {
@@ -173,6 +179,44 @@ struct SensoryMapView: View {
         .calmCard()
         .padding(.horizontal)
         .padding(.bottom, 16)
+    }
+
+    private var locateButton: some View {
+        Button {
+            locateMe()
+        } label: {
+            Image("LocateMe")
+                .renderingMode(.template)
+                .foregroundStyle(Color.primary)
+                .frame(width: 32, height: 32)
+                .background(Color(.systemBackground), in: Circle())
+                .shadow(color: .black.opacity(0.25), radius: 2)
+                .frame(width: 44, height: 44)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("내 위치로 이동")
+    }
+
+    private func locateMe() {
+        if locator.isDenied {
+            alerts.present(
+                systemImage: "location.slash",
+                title: "위치 권한이 꺼져 있어요",
+                message: "설정에서 위치 접근을 허용하면 지도에서 내 위치를 볼 수 있어요.",
+                cancelTitle: "취소",
+                actionTitle: "설정 열기"
+            ) {
+                if let url = URL(string: UIApplication.openSettingsURLString) {
+                    openURL(url)
+                }
+            }
+            return
+        }
+        locator.requestOnce()
+        withAnimation(.easeInOut(duration: 0.4)) {
+            position = .userLocation(fallback: position)
+        }
     }
 
     private func focusFromRouter() {
