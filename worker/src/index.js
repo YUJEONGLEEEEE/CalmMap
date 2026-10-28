@@ -4,7 +4,7 @@ import { buildPath, fetchSeoul, normalize } from "./seoul.js";
 
 const CRON_CHUNKS = ["*/10 * * * *", "2-59/10 * * * *", "4-59/10 * * * *"];
 const CHUNK_COUNT = CRON_CHUNKS.length;
-const PLACE_TTL_SECONDS = 300;
+const KEEP_MAX_AGE_MS = 60 * 60 * 1000;
 const SUBREQUEST_LIMIT = 50;
 
 export default {
@@ -40,11 +40,6 @@ export default {
       return json(await readSnapshot(env));
     }
 
-    const match = url.pathname.match(/^\/v1\/places\/(POI\d{3})$/);
-    if (match) {
-      return placeResponse(match[1], env, ctx);
-    }
-
     return json({ error: "not_found" }, 404);
   },
 
@@ -54,26 +49,6 @@ export default {
     ctx.waitUntil(refreshChunk(chunk, env));
   },
 };
-
-async function placeResponse(code, env, ctx) {
-  if (!PLACE_CODES.includes(code)) {
-    return json({ error: "unknown_place" }, 404);
-  }
-  const cache = caches.default;
-  const cacheKey = new Request(`https://cache.calmmap/places/${code}`);
-  const cached = await cache.match(cacheKey);
-  if (cached) {
-    return cached;
-  }
-  try {
-    const place = normalize(await fetchSeoul(buildPath(env.SEOUL_API_KEY, code), env.SEOUL_FETCH_MODE));
-    const response = json(place, 200, { "Cache-Control": `public, max-age=${PLACE_TTL_SECONDS}` });
-    ctx.waitUntil(cache.put(cacheKey, response.clone()));
-    return response;
-  } catch (error) {
-    return json({ error: "upstream_failed", detail: String(error.message || error) }, 502);
-  }
-}
 
 function chunkCodes(chunk) {
   const size = Math.ceil(PLACE_CODES.length / CHUNK_COUNT);
@@ -113,17 +88,15 @@ async function refreshChunk(chunk, env) {
   const previous = await env.SNAPSHOT.get(`chunk:${chunk}`, "json");
   let kept = 0;
   for (const { code } of failures) {
-    if (previous?.places?.[code]) {
+    if (previous?.places?.[code] && isRecent(previous.places[code].observedAt)) {
       places[code] = previous.places[code];
       kept += 1;
     }
   }
 
   const fresh = codes.length - failures.length;
-  if (fresh > 0) {
-    const record = { updatedAt: new Date().toISOString(), places, failures };
-    await env.SNAPSHOT.put(`chunk:${chunk}`, JSON.stringify(record));
-  }
+  const record = { updatedAt: new Date().toISOString(), places, failures };
+  await env.SNAPSHOT.put(`chunk:${chunk}`, JSON.stringify(record));
   return { chunk, requested: codes.length, fresh, retried: retry.length, kept, failures };
 }
 
@@ -139,6 +112,14 @@ async function readSnapshot(env) {
     updatedAt.push(record.updatedAt);
   }
   return { updatedAt: updatedAt.sort()[0] ?? null, places };
+}
+
+function isRecent(observedAt) {
+  const match = /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})/.exec(observedAt ?? "");
+  if (!match) return false;
+  const [, y, mo, d, h, mi] = match;
+  const observed = Date.parse(`${y}-${mo}-${d}T${h}:${mi}:00+09:00`);
+  return Number.isFinite(observed) && Date.now() - observed <= KEEP_MAX_AGE_MS;
 }
 
 function json(body, status = 200, headers = {}) {
