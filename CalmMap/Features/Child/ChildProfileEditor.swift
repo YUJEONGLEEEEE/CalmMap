@@ -197,11 +197,11 @@ struct ChildProfileEditor: View {
             return
         }
         sheetAlerts.present(
-            systemImage: "pencil",
-            title: "변경한 내용을 버릴까요?",
-            message: "지금 나가면 입력한 내용이 저장되지 않아요.",
-            cancelTitle: "계속 편집",
-            actionTitle: "버리기",
+            systemImage: "exclamationmark.circle",
+            title: "저장하지 않고 나갈까요?",
+            message: "지금 나가면 바꾼 내용이 저장되지 않아요.",
+            cancelTitle: "계속 수정",
+            actionTitle: "나가기",
             isDestructive: true
         ) {
             dismiss()
