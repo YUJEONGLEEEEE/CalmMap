@@ -6,6 +6,7 @@ struct SensoryMapView: View {
     @Environment(SensoryMapModel.self) private var model
     @Environment(ToastCenter.self) private var toasts
     @Environment(AlertCenter.self) private var alerts
+    @Environment(AppRouter.self) private var router
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Query(sort: \SoundMeasurement.measuredAt, order: .reverse) private var measurements: [SoundMeasurement]
     @AppStorage("hasSeenMapIntro") private var hasSeenIntro = false
@@ -100,6 +101,9 @@ struct SensoryMapView: View {
             .onChange(of: measurements.count) {
                 model.apply(measurements: measurements)
             }
+            .onChange(of: router.mapFocus) {
+                focusFromRouter()
+            }
         }
         .overlay {
             Color(light: 0xD7DFEA, dark: 0x1A2940)
@@ -168,6 +172,29 @@ struct SensoryMapView: View {
         .calmCard()
         .padding(.horizontal)
         .padding(.bottom, 16)
+    }
+
+    private func focusFromRouter() {
+        guard let focus = router.mapFocus else { return }
+        router.mapFocus = nil
+        hasSeenIntro = true
+        model.apply(measurements: measurements)
+        let coordinate: CLLocationCoordinate2D?
+        switch focus {
+        case .place(let code):
+            let entry = model.entry(for: code)
+            coordinate = entry?.place.coordinate
+            selected = entry
+        case .spot(let id):
+            let spot = model.spot(id: id)
+            coordinate = spot?.coordinate
+            selectedSpot = spot
+        }
+        if let coordinate {
+            withAnimation(.easeInOut(duration: 0.4)) {
+                position = .region(MKCoordinateRegion(center: coordinate, span: MKCoordinateSpan(latitudeDelta: 0.03, longitudeDelta: 0.03)))
+            }
+        }
     }
 
     private func revealMap() async {
@@ -261,5 +288,6 @@ struct SensoryMapView: View {
     SensoryMapView()
         .environment(ToastCenter())
         .environment(AlertCenter())
+        .environment(AppRouter())
         .environment(SensoryMapModel())
 }

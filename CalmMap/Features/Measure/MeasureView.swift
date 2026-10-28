@@ -10,6 +10,7 @@ struct MeasureView: View {
     @Environment(SensoryMapModel.self) private var model
     @Environment(\.modelContext) private var modelContext
     @Environment(\.openURL) private var openURL
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var meter = SoundMeter()
     @State private var location = LocationProvider()
     @State private var place: Place?
@@ -24,7 +25,9 @@ struct MeasureView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
-                    privacyNote
+                    if meter.state != .measuring {
+                        privacyNote
+                    }
                     placeSelector
                     if useCurrentLocation {
                         soundOnlyNote
@@ -116,12 +119,35 @@ struct MeasureView: View {
                     }
                 }
                 Spacer()
-                Image(systemName: "chevron.right").foregroundStyle(.secondary)
+                if meter.state == .measuring {
+                    measuringBadge
+                } else {
+                    Image(systemName: "chevron.right").foregroundStyle(.secondary)
+                }
             }
             .calmCard()
         }
         .buttonStyle(.plain)
         .disabled(meter.state == .measuring)
+    }
+
+    private var measuringBadge: some View {
+        HStack(spacing: 5) {
+            Circle()
+                .fill(Color.calmInk)
+                .frame(width: 6, height: 6)
+                .phaseAnimator([1.0, 0.25]) { content, phase in
+                    content.opacity(reduceMotion ? 1 : phase)
+                } animation: { _ in
+                    .easeInOut(duration: 0.6)
+                }
+            Text("측정 중")
+                .font(.caption2.weight(.semibold))
+        }
+        .foregroundStyle(Color.calmInk)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 5)
+        .background(Color.calmTint, in: Capsule())
     }
 
     private var startSection: some View {
@@ -295,9 +321,14 @@ struct MeasureView: View {
         modelContext.insert(measurement)
         try? modelContext.save()
         if useCurrentLocation {
-            toasts.show("현재 위치에 저장했어요. 지도에 표시됐어요.", style: .success)
+            let spotID = measurement.id
+            toasts.show("현재 위치에 저장했어요", style: .success, duration: .seconds(4.5), actionTitle: "지도에서 보기") { [router] in
+                router.showOnMap(.spot(spotID))
+            }
         } else if let place {
-            toasts.show("\(place.name)에 저장했어요. 지도에 반영됐어요.", style: .success)
+            toasts.show("\(place.name)에 저장했어요", style: .success, duration: .seconds(4.5), actionTitle: "지도에서 보기") { [router] in
+                router.showOnMap(.place(place.code))
+            }
         }
         brightLight = false
         flicker = false
@@ -321,6 +352,7 @@ struct MeasureView: View {
 
 struct FlowTags: View {
     let categories: [SoundCategory]
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         HStack(spacing: 8) {
@@ -330,8 +362,10 @@ struct FlowTags: View {
                     .padding(.horizontal, 10)
                     .padding(.vertical, 6)
                     .calmGlass(Capsule())
+                    .transition(reduceMotion ? .opacity : .opacity.combined(with: .offset(y: 6)))
             }
         }
+        .animation(.easeOut(duration: 0.45), value: categories)
     }
 }
 
