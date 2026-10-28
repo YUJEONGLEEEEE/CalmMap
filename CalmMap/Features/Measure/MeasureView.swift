@@ -110,7 +110,7 @@ struct MeasureView: View {
                 if scenePhase == .background, meter.state == .measuring {
                     meter.cancel()
                     stoppedInBackground = true
-                } else if scenePhase == .active {
+                } else if scenePhase == .active, router.selectedTab == .measure {
                     location.requestOnce()
                 }
                 if scenePhase == .active, stoppedInBackground {

@@ -36,7 +36,11 @@ struct MeasuredSpot: Identifiable {
             }
         var buckets: [(anchor: CLLocation, items: [SoundMeasurement])] = []
         for (measurement, location) in located {
-            if let index = buckets.firstIndex(where: { $0.anchor.distance(from: location) <= mergeRadius }) {
+            let nearest = buckets.indices
+                .map { ($0, buckets[$0].anchor.distance(from: location)) }
+                .filter { $0.1 <= mergeRadius }
+                .min { $0.1 < $1.1 }
+            if let index = nearest?.0 {
                 buckets[index].items.append(measurement)
             } else {
                 buckets.append((location, [measurement]))
