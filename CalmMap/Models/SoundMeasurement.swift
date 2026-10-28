@@ -71,7 +71,7 @@ enum MeasuredSound {
             let diff = abs(hour - targetHour)
             return min(diff, 24 - diff) <= windowHours
         }
-        return nearby.isEmpty ? forPlace : nearby
+        return nearby
     }
 
     static func score(for placeCode: String, at date: Date, in measurements: [SoundMeasurement], calendar: Calendar = .seoul) -> Double? {

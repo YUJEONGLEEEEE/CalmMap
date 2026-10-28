@@ -7,6 +7,8 @@ final class LocationProvider: NSObject, CLLocationManagerDelegate {
     private(set) var areaName: String?
     private(set) var isDenied = false
     private(set) var isApproximate = false
+    private(set) var didFail = false
+    private var wantsLocation = false
     private let manager = CLLocationManager()
     private let geocoder = CLGeocoder()
 
@@ -22,6 +24,8 @@ final class LocationProvider: NSObject, CLLocationManagerDelegate {
     }
 
     func requestOnce() {
+        wantsLocation = true
+        didFail = false
         switch manager.authorizationStatus {
         case .notDetermined:
             manager.requestWhenInUseAuthorization()
@@ -36,7 +40,7 @@ final class LocationProvider: NSObject, CLLocationManagerDelegate {
         let status = manager.authorizationStatus
         Task { @MainActor in
             self.isDenied = Self.isDenied(status)
-            if status == .authorizedWhenInUse || status == .authorizedAlways {
+            if self.wantsLocation, status == .authorizedWhenInUse || status == .authorizedAlways {
                 self.manager.requestLocation()
             }
         }
@@ -47,6 +51,7 @@ final class LocationProvider: NSObject, CLLocationManagerDelegate {
         let approximate = manager.accuracyAuthorization == .reducedAccuracy || (latest?.horizontalAccuracy ?? 0) > Place.nearbyRadius
         Task { @MainActor in
             self.isApproximate = approximate
+            self.didFail = false
             self.location = latest
             self.resolveArea(of: latest)
         }
@@ -57,10 +62,7 @@ final class LocationProvider: NSObject, CLLocationManagerDelegate {
         geocoder.cancelGeocode()
         geocoder.reverseGeocodeLocation(location, preferredLocale: Locale(identifier: "ko_KR")) { [weak self] placemarks, _ in
             guard let self else { return }
-            guard let mark = placemarks?.first else {
-                Task { @MainActor in self.areaName = nil }
-                return
-            }
+            guard let mark = placemarks?.first else { return }
             var parts: [String] = []
             for case let part? in [mark.administrativeArea, mark.locality, mark.subLocality] where !parts.contains(part) {
                 parts.append(part)
@@ -70,11 +72,17 @@ final class LocationProvider: NSObject, CLLocationManagerDelegate {
         }
     }
 
-    nonisolated func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {}
+    nonisolated func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        Task { @MainActor in
+            if self.location == nil {
+                self.didFail = true
+            }
+        }
+    }
 }
 
 extension Place {
-    static let nearbyRadius: CLLocationDistance = 500
+    nonisolated static let nearbyRadius: CLLocationDistance = 500
 
     func distance(from location: CLLocation) -> CLLocationDistance {
         location.distance(from: CLLocation(latitude: latitude, longitude: longitude))
@@ -94,8 +102,12 @@ extension Array where Element == Place {
 
 extension CLLocationDistance {
     var shortText: String {
-        if self < 1000 {
-            return "\(Int((self / 10).rounded()) * 10)m"
+        if self < 10 {
+            return "10m 이내"
+        }
+        let meters = Int((self / 10).rounded()) * 10
+        if meters < 1000 {
+            return "\(meters)m"
         }
         return String(format: "%.1fkm", self / 1000)
     }

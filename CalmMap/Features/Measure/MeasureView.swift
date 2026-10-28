@@ -15,6 +15,8 @@ struct MeasureView: View {
     @State private var stoppedInBackground = false
     @State private var autoSelected = false
     @State private var spotAnchor: CLLocationCoordinate2D?
+    @State private var measuredLocation: CLLocation?
+    @State private var measuredAreaName: String?
     @State private var meter = SoundMeter()
     @State private var location = LocationProvider()
     @State private var place: Place?
@@ -64,6 +66,7 @@ struct MeasureView: View {
                         place = nil
                         useCurrentLocation = true
                         autoSelected = false
+                        spotAnchor = nil
                         showingPlacePicker = false
                     },
                     onPick: { picked in
@@ -89,6 +92,7 @@ struct MeasureView: View {
                 toasts.show(meter.interruptionMessage, style: .warning, duration: .seconds(4))
             }
             .onChange(of: meter.state) {
+                UIApplication.shared.isIdleTimerDisabled = meter.state == .measuring
                 if meter.state == .finished, router.selectedTab != .measure {
                     toasts.show("측정이 끝났어요. 결과를 저장해 주세요.", style: .success, duration: .seconds(4.5), actionTitle: "결과 보기") { [router] in
                         router.selectedTab = .measure
@@ -131,6 +135,11 @@ struct MeasureView: View {
                         Label(currentLocationText, systemImage: location.isDenied ? "location.slash" : "location")
                             .font(.caption)
                             .foregroundStyle(.secondary)
+                        if location.isApproximate, location.location != nil {
+                            Label("대략적인 위치라 핀이 실제 위치와 다를 수 있어요", systemImage: "location.circle")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
                         if let distance = distanceFromSpotAnchor, distance > MeasuredSpot.mergeRadius {
                             Label("이 핀에서 \(distance.shortText) 떨어져 있어요 · 측정하면 새 핀이 생겨요", systemImage: "exclamationmark.triangle")
                                 .font(.caption)
@@ -139,7 +148,7 @@ struct MeasureView: View {
                     } else {
                         Text(place?.name ?? "장소를 골라 주세요").font(.headline)
                         if place == nil, location.isApproximate {
-                            Label("대략적 위치라 장소를 자동으로 고르지 않았어요", systemImage: "location.circle")
+                            Label("대략적인 위치라 장소를 자동으로 고르지 않았어요", systemImage: "location.circle")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
@@ -149,7 +158,7 @@ struct MeasureView: View {
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                             } else {
-                                Label("현장에서 \(place.distance(from: current).shortText) 떨어져 있어요 · 현장에서 측정하면 더 정확해요", systemImage: "exclamationmark.triangle")
+                                Label("이 장소에서 \(place.distance(from: current).shortText) 떨어져 있어요 · 가까이 가서 측정하면 더 정확해요", systemImage: "exclamationmark.triangle")
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                             }
@@ -196,6 +205,15 @@ struct MeasureView: View {
             Text("\(Int(SoundMeter.duration))초 동안 주변 소리의 종류와 크기를 살펴요.\n폰을 손에 들고 평소처럼 서 있으면 돼요.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
+            if useCurrentLocation, location.didFail, location.location == nil {
+                Button {
+                    location.requestOnce()
+                } label: {
+                    Label("위치 다시 찾기", systemImage: "location")
+                }
+                .font(.subheadline.weight(.semibold))
+                .tint(Color.calmInk)
+            }
             Button {
                 Task { await startMeasuring() }
             } label: {
@@ -239,7 +257,10 @@ struct MeasureView: View {
     private var currentLocationText: String {
         if location.isDenied { return "위치 권한이 꺼져 있어요" }
         if let areaName = location.areaName { return areaName }
-        return location.location == nil ? "위치를 확인하고 있어요" : "현재 위치"
+        if location.location == nil {
+            return location.didFail ? "위치를 찾지 못했어요" : "위치를 확인하고 있어요"
+        }
+        return "현재 위치"
     }
 
     private var locationDeniedNote: some View {
@@ -267,9 +288,19 @@ struct MeasureView: View {
         .calmTintCard(padding: 12, cornerRadius: 16)
     }
 
+    private var soundOnlyText: String {
+        guard let current = location.location else {
+            return "현재 위치에서는 소리만 기록해요.\n서울 121곳 근처에서는 사람 붐빔까지 함께 계산해요."
+        }
+        if places.contains(where: { $0.isNearby(current) }) {
+            return "현재 위치에서는 소리만 기록해요.\n근처 장소를 고르면 사람 붐빔까지 함께 계산해요."
+        }
+        return "근처에 실시간 데이터 장소가 없어서 소리만 기록해요.\n서울 121곳 근처에서는 사람 붐빔까지 함께 계산해요."
+    }
+
     private var soundOnlyNote: some View {
         Label {
-            Text("근처에 실시간 데이터 장소가 없어서 소리만 기록해요.\n서울 121곳 근처에서는 사람 붐빔까지 함께 계산해요.")
+            Text(soundOnlyText)
                 .font(.footnote)
         } icon: {
             Image(systemName: "info.circle")
@@ -281,6 +312,10 @@ struct MeasureView: View {
     private func startMeasuring() async {
         let wasAsked = AVAudioApplication.shared.recordPermission != .undetermined
         await meter.start()
+        if meter.state == .measuring {
+            measuredLocation = location.location
+            measuredAreaName = location.areaName
+        }
         guard meter.state == .denied else { return }
         if wasAsked {
             alerts.present(
@@ -384,6 +419,8 @@ struct MeasureView: View {
             Toggle("깜빡이는 조명이 있었어요", isOn: $flicker)
             HStack {
                 Button("다시 측정") {
+                    brightLight = false
+                    flicker = false
                     meter.reset()
                 }
                 .buttonStyle(.calmSecondary)
@@ -397,8 +434,16 @@ struct MeasureView: View {
     }
 
     private func save(_ summary: SoundMeter.Summary) {
-        let current = location.location
-        guard place != nil || (useCurrentLocation && current != nil) else { return }
+        let current = measuredLocation ?? location.location
+        if useCurrentLocation, current == nil {
+            location.requestOnce()
+            toasts.show("위치를 아직 찾지 못했어요. 잠시 후 다시 저장해 주세요.", style: .warning)
+            return
+        }
+        guard place != nil || useCurrentLocation else {
+            toasts.show("측정 장소를 골라 주세요.", style: .warning)
+            return
+        }
         let measurement = SoundMeasurement(
             placeCode: useCurrentLocation ? SoundMeasurement.currentLocationCode : place?.code ?? "",
             measuredAt: Date(),
@@ -411,10 +456,16 @@ struct MeasureView: View {
             flicker: flicker,
             latitude: useCurrentLocation ? current?.coordinate.latitude : nil,
             longitude: useCurrentLocation ? current?.coordinate.longitude : nil,
-            areaName: useCurrentLocation ? location.areaName : nil
+            areaName: useCurrentLocation ? measuredAreaName ?? location.areaName : nil
         )
         modelContext.insert(measurement)
-        try? modelContext.save()
+        do {
+            try modelContext.save()
+        } catch {
+            modelContext.delete(measurement)
+            toasts.show("저장하지 못했어요. 다시 시도해 주세요.", style: .warning)
+            return
+        }
         if useCurrentLocation {
             let spotID = measurement.id
             toasts.show("현재 위치에 저장했어요", style: .success, duration: .seconds(4.5), actionTitle: "지도에서 보기") { [router] in
@@ -427,31 +478,53 @@ struct MeasureView: View {
         }
         brightLight = false
         flicker = false
+        spotAnchor = nil
+        measuredLocation = nil
+        measuredAreaName = nil
         meter.reset()
     }
 
     private func adoptRouterPlace() {
-        if meter.state == .measuring, router.measurePlace != nil || router.measureAtCurrentLocation {
-            router.measurePlace = nil
-            router.measureAtCurrentLocation = false
+        let pendingPlace = router.measurePlace
+        let pendingCurrent = router.measureAtCurrentLocation
+        let anchor = router.measureAnchor
+        guard pendingPlace != nil || pendingCurrent else { return }
+        router.measurePlace = nil
+        router.measureAtCurrentLocation = false
+        router.measureAnchor = nil
+        switch meter.state {
+        case .measuring:
             toasts.show("측정 중에는 장소를 바꿀 수 없어요.")
-            return
+        case .finished:
+            alerts.present(
+                systemImage: "exclamationmark.circle",
+                title: "저장하지 않은 결과가 있어요",
+                message: "지금 결과를 저장하지 않고 새로 측정할까요?",
+                cancelTitle: "결과 보기",
+                actionTitle: "새로 측정",
+                isDestructive: true
+            ) {
+                brightLight = false
+                flicker = false
+                meter.reset()
+                select(place: pendingPlace, currentLocation: pendingCurrent, anchor: anchor)
+            }
+        default:
+            select(place: pendingPlace, currentLocation: pendingCurrent, anchor: anchor)
         }
-        if let pending = router.measurePlace {
-            place = pending
-            useCurrentLocation = false
-            autoSelected = false
-            spotAnchor = nil
-            router.measurePlace = nil
-        }
-        if router.measureAtCurrentLocation {
+    }
+
+    private func select(place pending: Place?, currentLocation: Bool, anchor: CLLocationCoordinate2D?) {
+        autoSelected = false
+        if currentLocation {
             place = nil
             useCurrentLocation = true
-            autoSelected = false
-            spotAnchor = router.measureAnchor
-            router.measureAnchor = nil
-            router.measureAtCurrentLocation = false
+            spotAnchor = anchor
             location.requestOnce()
+        } else if let pending {
+            place = pending
+            useCurrentLocation = false
+            spotAnchor = nil
         }
     }
 }
