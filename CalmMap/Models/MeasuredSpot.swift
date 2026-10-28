@@ -29,27 +29,32 @@ struct MeasuredSpot: Identifiable {
     static func group(_ measurements: [SoundMeasurement]) -> [MeasuredSpot] {
         let located = measurements
             .filter(\.isAtCurrentLocation)
-            .sorted { $0.measuredAt > $1.measuredAt }
+            .sorted { $0.measuredAt < $1.measuredAt }
             .compactMap { measurement -> (SoundMeasurement, CLLocation)? in
                 guard let latitude = measurement.latitude, let longitude = measurement.longitude else { return nil }
                 return (measurement, CLLocation(latitude: latitude, longitude: longitude))
             }
         var buckets: [(anchor: CLLocation, items: [SoundMeasurement])] = []
         for (measurement, location) in located {
-            if let index = buckets.firstIndex(where: { $0.anchor.distance(from: location) <= mergeRadius }) {
+            let nearest = buckets.indices
+                .map { ($0, buckets[$0].anchor.distance(from: location)) }
+                .filter { $0.1 <= mergeRadius }
+                .min { $0.1 < $1.1 }
+            if let index = nearest?.0 {
                 buckets[index].items.append(measurement)
             } else {
                 buckets.append((location, [measurement]))
             }
         }
         return buckets.compactMap { bucket in
-            guard let first = bucket.items.first else { return nil }
+            guard let oldest = bucket.items.first else { return nil }
+            let newestFirst = Array(bucket.items.reversed())
             return MeasuredSpot(
-                id: first.id,
+                id: oldest.id,
                 latitude: bucket.anchor.coordinate.latitude,
                 longitude: bucket.anchor.coordinate.longitude,
-                areaName: bucket.items.lazy.compactMap(\.areaName).first,
-                measurements: bucket.items
+                areaName: newestFirst.lazy.compactMap(\.areaName).first,
+                measurements: newestFirst
             )
         }
     }

@@ -2,6 +2,7 @@ import AVFoundation
 import Foundation
 import Observation
 import SoundAnalysis
+import UIKit
 
 @Observable
 final class SoundMeter {
@@ -42,6 +43,8 @@ final class SoundMeter {
     private var interruptionObserver: NSObjectProtocol?
     private var configurationObserver: NSObjectProtocol?
     private(set) var interruptionMessage = ""
+
+    private struct InputUnavailable: Error {}
 
     var remaining: Int { max(Int((Self.duration - elapsed).rounded(.up)), 0) }
     var progress: Double { min(elapsed / Self.duration, 1) }
@@ -90,6 +93,7 @@ final class SoundMeter {
         let engine = AVAudioEngine()
         let input = engine.inputNode
         let format = input.outputFormat(forBus: 0)
+        guard format.sampleRate > 0, format.channelCount > 0 else { throw InputUnavailable() }
         let analyzer = SNAudioStreamAnalyzer(format: format)
         let request = try SNClassifySoundRequest(classifierIdentifier: .version1)
         let observer = ClassificationObserver { [weak self] label in
@@ -111,6 +115,7 @@ final class SoundMeter {
         self.observer = observer
         startedAt = Date()
         state = .measuring
+        UIApplication.shared.isIdleTimerDisabled = true
 
         interruptionObserver = NotificationCenter.default.addObserver(
             forName: AVAudioSession.interruptionNotification,
@@ -130,9 +135,11 @@ final class SoundMeter {
             Task { @MainActor [weak self] in self?.interrupt(message: "이어폰이나 오디오 연결이 바뀌어 측정이 멈췄어요.\n다시 시작해 주세요.") }
         }
 
-        timer = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true) { [weak self] _ in
+        let timer = Timer(timeInterval: 0.25, repeats: true) { [weak self] _ in
             Task { @MainActor [weak self] in self?.tick() }
         }
+        RunLoop.main.add(timer, forMode: .common)
+        self.timer = timer
     }
 
     private func tick() {
@@ -199,6 +206,7 @@ final class SoundMeter {
     }
 
     private func stopEngine() {
+        UIApplication.shared.isIdleTimerDisabled = false
         timer?.invalidate()
         timer = nil
         if let interruptionObserver {
@@ -211,7 +219,9 @@ final class SoundMeter {
         configurationObserver = nil
         engine?.inputNode.removeTap(onBus: 0)
         engine?.stop()
-        analyzer?.completeAnalysis()
+        if let analyzer {
+            analysisQueue.async { analyzer.completeAnalysis() }
+        }
         engine = nil
         analyzer = nil
         observer = nil

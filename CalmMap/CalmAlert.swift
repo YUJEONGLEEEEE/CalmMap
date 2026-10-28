@@ -108,6 +108,10 @@ private struct CalmAlertCard: View {
         .padding(.horizontal, 32)
         .accessibilityElement(children: .contain)
         .accessibilityAddTraits(.isModal)
+        .accessibilityAction(.escape) { dismiss() }
+        .onAppear {
+            UIAccessibility.post(notification: .screenChanged, argument: nil)
+        }
     }
 }
 

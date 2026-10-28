@@ -3,24 +3,26 @@ import SwiftData
 import SwiftUI
 
 struct SensoryMapView: View {
+    private static let seoulRegion = MKCoordinateRegion(
+        center: CLLocationCoordinate2D(latitude: 37.5560, longitude: 126.9900),
+        span: MKCoordinateSpan(latitudeDelta: 0.12, longitudeDelta: 0.12)
+    )
+
     @Environment(SensoryMapModel.self) private var model
     @Environment(ToastCenter.self) private var toasts
     @Environment(AlertCenter.self) private var alerts
     @Environment(AppRouter.self) private var router
     @Environment(\.openURL) private var openURL
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
     @Query(sort: \SoundMeasurement.measuredAt, order: .reverse) private var measurements: [SoundMeasurement]
     @AppStorage("hasSeenMapIntro") private var hasSeenIntro = false
     @State private var selected: SensoryMapModel.Entry?
     @State private var selectedSpot: MeasuredSpot?
     @State private var veilOpacity = 0.0
     @State private var locator = LocationProvider()
-    @State private var position: MapCameraPosition = .region(
-        MKCoordinateRegion(
-            center: CLLocationCoordinate2D(latitude: 37.5560, longitude: 126.9900),
-            span: MKCoordinateSpan(latitudeDelta: 0.12, longitudeDelta: 0.12)
-        )
-    )
+    @State private var isLocating = false
+    @State private var position: MapCameraPosition = .region(Self.seoulRegion)
 
     var body: some View {
         NavigationStack {
@@ -43,7 +45,7 @@ struct SensoryMapView: View {
                             Button {
                                 selectedSpot = spot
                             } label: {
-                                MeasuredSpotPin(tier: spot.tier)
+                                MeasuredSpotPin(tier: spot.tier, name: "\(spot.areaName ?? "현재 위치")에서 내가 측정한 곳")
                                     .shadow(color: .black.opacity(0.18), radius: 3, y: 1)
                             }
                             .buttonStyle(.plain)
@@ -106,10 +108,27 @@ struct SensoryMapView: View {
             }
             .task {
                 model.apply(measurements: measurements)
-                let stale = model.fetchedAt.map { Date().timeIntervalSince($0) > 600 } ?? true
-                if stale {
+                if isStale {
                     await refresh(announce: false)
                 }
+            }
+            .onChange(of: scenePhase) {
+                guard scenePhase == .active else { return }
+                model.expireStaleData()
+                if isStale {
+                    Task { await refresh(announce: false) }
+                }
+            }
+            .onChange(of: router.sheetDismissal) {
+                if router.selectedTab != .map {
+                    selected = nil
+                    selectedSpot = nil
+                }
+            }
+            .onChange(of: locator.location) {
+                guard isLocating, let current = locator.location else { return }
+                isLocating = false
+                checkOutsideSeoul(current)
             }
             .onChange(of: measurements.count) {
                 model.apply(measurements: measurements)
@@ -127,6 +146,28 @@ struct SensoryMapView: View {
         }
     }
 
+    private var isStale: Bool {
+        model.fetchedAt.map { Date().timeIntervalSince($0) > 600 } ?? true
+    }
+
+    private var canPresentAlert: Bool {
+        router.selectedTab == .map && selected == nil && selectedSpot == nil
+    }
+
+    private func move(to region: MKCoordinateRegion) {
+        withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.4)) {
+            position = .region(region)
+        }
+    }
+
+    private func checkOutsideSeoul(_ current: CLLocation) {
+        let nearest = model.places.map { $0.distance(from: current) }.min() ?? 0
+        guard nearest > 30_000 else { return }
+        toasts.show("실시간 정보는 서울에서만 볼 수 있어요", duration: .seconds(5), actionTitle: "서울로 이동") { [self] in
+            move(to: Self.seoulRegion)
+        }
+    }
+
     @ViewBuilder
     private func marker(for entry: SensoryMapModel.Entry) -> some View {
         if let tier = entry.reading?.tier {
@@ -134,15 +175,21 @@ struct SensoryMapView: View {
                 .shadow(color: .black.opacity(0.15), radius: 2, y: 1)
                 .accessibilityLabel("\(entry.place.name), \(tier.title)")
         } else {
-            Circle()
+            let ring = Circle()
                 .strokeBorder(.secondary, style: StrokeStyle(lineWidth: 1.5, dash: [3, 2]))
                 .frame(width: 22, height: 22)
-                .phaseAnimator([1.0, 0.35]) { content, phase in
-                    content.opacity(model.isLoading && !reduceMotion ? phase : 1)
-                } animation: { _ in
-                    .easeInOut(duration: 0.55)
+            Group {
+                if model.isLoading && !reduceMotion {
+                    ring.phaseAnimator([1.0, 0.35]) { content, phase in
+                        content.opacity(phase)
+                    } animation: { _ in
+                        .easeInOut(duration: 0.55)
+                    }
+                } else {
+                    ring
                 }
-                .accessibilityLabel("\(entry.place.name), \(model.isLoading ? "불러오는 중" : "데이터 없음")")
+            }
+            .accessibilityLabel("\(entry.place.name), \(model.isLoading ? "불러오는 중" : "데이터 없음")")
         }
     }
 
@@ -195,9 +242,12 @@ struct SensoryMapView: View {
         ForEach(SensoryTier.allCases, id: \.self) { tier in
             HStack(spacing: 6) {
                 TierBadge(tier: tier, size: 20)
+                    .accessibilityHidden(true)
                 Text("\(tier.title) \(model.count(of: tier))")
                     .font(.footnote.weight(.medium))
             }
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("\(tier.title) \(model.count(of: tier))곳")
         }
     }
 
@@ -206,9 +256,12 @@ struct SensoryMapView: View {
         if !model.spots.isEmpty {
             HStack(spacing: 6) {
                 MeasuredSpotPin(tier: .calm, size: 20)
+                    .accessibilityHidden(true)
                 Text("내 측정 \(model.spots.count)")
                     .font(.footnote.weight(.medium))
             }
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("내가 측정한 곳 \(model.spots.count)곳")
         }
     }
 
@@ -254,8 +307,9 @@ struct SensoryMapView: View {
             }
             return
         }
+        isLocating = true
         locator.requestOnce()
-        withAnimation(.easeInOut(duration: 0.4)) {
+        withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.4)) {
             position = .userLocation(fallback: position)
         }
     }
@@ -270,19 +324,20 @@ struct SensoryMapView: View {
         case .place(let code):
             let entry = model.entry(for: code)
             coordinate = entry?.place.coordinate
+            selectedSpot = nil
             selected = entry
         case .spot(let id):
             let spot = model.spot(id: id)
             coordinate = spot?.coordinate
+            selected = nil
             selectedSpot = spot
             if spot == nil {
                 toasts.show("측정 기록을 찾을 수 없어요. 이미 삭제됐을 수 있어요.")
             }
         }
         if let coordinate {
-            withAnimation(.easeInOut(duration: 0.4)) {
-                position = .region(MKCoordinateRegion(center: coordinate, span: MKCoordinateSpan(latitudeDelta: 0.03, longitudeDelta: 0.03)))
-            }
+            let center = CLLocationCoordinate2D(latitude: coordinate.latitude - 0.008, longitude: coordinate.longitude)
+            move(to: MKCoordinateRegion(center: center, span: MKCoordinateSpan(latitudeDelta: 0.03, longitudeDelta: 0.03)))
         }
     }
 
@@ -296,7 +351,7 @@ struct SensoryMapView: View {
         withAnimation(.easeOut(duration: 0.5)) {
             veilOpacity = 0
         }
-        if model.updatedAt == nil, !model.isLoading, model.errorMessage != nil {
+        if model.updatedAt == nil, !model.isLoading, model.loadFailure != nil {
             presentLoadError()
         }
     }
@@ -305,10 +360,10 @@ struct SensoryMapView: View {
         switch await model.refresh() {
         case .loaded:
             if announce, let updatedAt = model.updatedAt {
-                toasts.show("업데이트했어요 · \(updatedAt.seoulTimeText) 기준", style: .success)
+                toasts.show("업데이트했어요 · \(updatedAt.seoulStampText) 기준", style: .success)
             }
         case .failed:
-            if hasSeenIntro {
+            if hasSeenIntro, canPresentAlert {
                 presentLoadError()
             }
         case .skipped:
@@ -320,7 +375,7 @@ struct SensoryMapView: View {
         alerts.present(
             systemImage: "wifi.exclamationmark",
             title: "데이터를 불러오지 못했어요",
-            message: "인터넷 연결을 확인하고 다시 시도해 주세요.",
+            message: (model.loadFailure ?? .network).message,
             cancelTitle: "닫기",
             actionTitle: "다시 시도"
         ) {
@@ -343,14 +398,14 @@ struct SensoryMapView: View {
                         spotLegend
                     }
                 }
-                Text("\(updatedAt.seoulTimeText) 기준 · 서울시 실시간 도시데이터")
+                Text("\(updatedAt.seoulStampText) 기준 · 서울시 실시간 도시데이터")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             } else if model.isLoading {
                 HStack(spacing: 8) {
                     ProgressView()
                         .controlSize(.small)
-                    Text("서울시 실시간 도시데이터 불러오는 중…")
+                    Text("서울시 실시간 도시데이터를 불러오는 중…")
                         .font(.footnote.weight(.medium))
                         .foregroundStyle(.secondary)
                 }

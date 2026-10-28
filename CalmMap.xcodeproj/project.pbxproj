@@ -279,7 +279,7 @@
 				INFOPLIST_FILE = CalmMap/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "무던한 지도";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "내 주변 장소의 감각부하(소리·혼잡) 정보를 보여드리고, 측정한 값을 해당 장소에 연결하기 위해 위치를 사용합니다. 허용하지 않아도 지도에서 장소를 직접 골라 이용할 수 있습니다.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "지도에 내 위치를 표시하고, 가까운 장소를 골라 측정하거나 현재 위치에서 측정한 곳을 지도에 표시하기 위해 위치를 사용합니다. 측정 기록은 이 기기에만 저장됩니다. 허용하지 않아도 장소를 직접 골라 이용할 수 있습니다.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "주변 소리의 종류(말소리·음악·사이렌 등)와 크기를 기기 안에서만 분석합니다. 녹음 파일은 저장하거나 전송하지 않습니다.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -320,7 +320,7 @@
 				INFOPLIST_FILE = CalmMap/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "무던한 지도";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "내 주변 장소의 감각부하(소리·혼잡) 정보를 보여드리고, 측정한 값을 해당 장소에 연결하기 위해 위치를 사용합니다. 허용하지 않아도 지도에서 장소를 직접 골라 이용할 수 있습니다.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "지도에 내 위치를 표시하고, 가까운 장소를 골라 측정하거나 현재 위치에서 측정한 곳을 지도에 표시하기 위해 위치를 사용합니다. 측정 기록은 이 기기에만 저장됩니다. 허용하지 않아도 장소를 직접 골라 이용할 수 있습니다.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "주변 소리의 종류(말소리·음악·사이렌 등)와 크기를 기기 안에서만 분석합니다. 녹음 파일은 저장하거나 전송하지 않습니다.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;

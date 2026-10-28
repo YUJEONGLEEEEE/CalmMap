@@ -24,6 +24,7 @@ final class ToastCenter {
 
     private(set) var current: Toast?
     private var dismissTask: Task<Void, Never>?
+    private var announceTask: Task<Void, Never>?
 
     func show(
         _ message: String,
@@ -35,7 +36,12 @@ final class ToastCenter {
         let toast = Toast(message: message, style: style, actionTitle: actionTitle, action: action)
         current = toast
         let spoken = actionTitle.map { "\(message). \($0) 버튼이 있어요." } ?? message
-        AccessibilityNotification.Announcement(spoken).post()
+        announceTask?.cancel()
+        announceTask = Task {
+            try? await Task.sleep(for: .milliseconds(600))
+            guard !Task.isCancelled else { return }
+            AccessibilityNotification.Announcement(spoken).post()
+        }
         let visible = UIAccessibility.isVoiceOverRunning ? max(duration, .seconds(8)) : duration
         dismissTask?.cancel()
         dismissTask = Task { [weak self] in
@@ -47,6 +53,7 @@ final class ToastCenter {
 
     func dismiss() {
         dismissTask?.cancel()
+        announceTask?.cancel()
         current = nil
     }
 }
@@ -62,6 +69,7 @@ private extension ToastCenter.Toast.Style {
 }
 
 struct ToastOverlay: ViewModifier {
+    var showsActions = true
     @Environment(ToastCenter.self) private var toasts
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -70,7 +78,7 @@ struct ToastOverlay: ViewModifier {
             if let toast = toasts.current {
                 HStack(spacing: 10) {
                     Label(toast.message, systemImage: toast.style.symbolName)
-                    if let title = toast.actionTitle, let action = toast.action {
+                    if showsActions, let title = toast.actionTitle, let action = toast.action {
                         Button {
                             toasts.dismiss()
                             action()
@@ -88,8 +96,8 @@ struct ToastOverlay: ViewModifier {
                     .foregroundStyle(Color.calmInk)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 12)
-                    .background(Color.calmToast, in: Capsule())
-                    .overlay(Capsule().strokeBorder(Color.calmInk.opacity(0.12), lineWidth: 1))
+                    .background(Color.calmToast, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).strokeBorder(Color.calmInk.opacity(0.12), lineWidth: 1))
                     .shadow(color: .black.opacity(0.12), radius: 10, y: 4)
                     .padding(.horizontal, 20)
                     .padding(.bottom, 24)
@@ -104,7 +112,7 @@ struct ToastOverlay: ViewModifier {
 }
 
 extension View {
-    func toastOverlay() -> some View {
-        modifier(ToastOverlay())
+    func toastOverlay(showsActions: Bool = true) -> some View {
+        modifier(ToastOverlay(showsActions: showsActions))
     }
 }

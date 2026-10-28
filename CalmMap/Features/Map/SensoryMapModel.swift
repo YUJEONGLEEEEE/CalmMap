@@ -16,7 +16,7 @@ final class SensoryMapModel {
     private(set) var fetchedAt: Date?
     private(set) var updatedAt: Date?
     private(set) var isLoading = false
-    private(set) var errorMessage: String?
+    private(set) var loadFailure: LoadFailure?
     private(set) var profile: SensoryProfile = .general
 
     let places: [Place]
@@ -28,6 +28,20 @@ final class SensoryMapModel {
         self.places = places
         self.client = client
         self.entries = places.map { Entry(place: $0, live: nil, reading: nil) }
+    }
+
+    static let liveMaxAge: TimeInterval = 2 * 60 * 60
+
+    enum LoadFailure {
+        case network
+        case liveUnavailable
+
+        var message: String {
+            switch self {
+            case .network: "인터넷 연결을 확인하거나 잠시 후 다시 시도해 주세요."
+            case .liveUnavailable: "서울시 실시간 데이터가 잠시 들어오지 않고 있어요. 잠시 후 다시 시도해 주세요."
+            }
+        }
     }
 
     enum RefreshResult {
@@ -43,14 +57,19 @@ final class SensoryMapModel {
         defer { isLoading = false }
         do {
             snapshot = try await client.fetchSnapshot()
-            fetchedAt = Date()
             rebuild()
-            errorMessage = nil
+            guard updatedAt != nil else {
+                loadFailure = .liveUnavailable
+                return .failed
+            }
+            fetchedAt = Date()
+            loadFailure = nil
             return .loaded
         } catch let error where Self.isCancellation(error) {
             return .skipped
         } catch {
-            errorMessage = error.localizedDescription
+            loadFailure = .network
+            rebuild()
             return .failed
         }
     }
@@ -65,8 +84,16 @@ final class SensoryMapModel {
         rebuild()
     }
 
+    func forget(measurementIDs ids: Set<UUID>) {
+        apply(measurements: measurements.filter { !ids.contains($0.id) })
+    }
+
     func spot(id: UUID) -> MeasuredSpot? {
-        spots.first { $0.id == id }
+        spots.first { $0.id == id } ?? spots.first { $0.measurements.contains { $0.id == id } }
+    }
+
+    func expireStaleData() {
+        rebuild()
     }
 
     func apply(profile: SensoryProfile) {
@@ -108,7 +135,7 @@ final class SensoryMapModel {
         guard let snapshot else { return }
         let now = Date()
         entries = places.map { place in
-            guard let live = snapshot.places[place.code] else {
+            guard let live = snapshot.places[place.code], Self.isFresh(live, now: now) else {
                 return Entry(place: place, live: nil, reading: nil)
             }
             let reading = SensoryIndex.reading(
@@ -121,6 +148,11 @@ final class SensoryMapModel {
             return Entry(place: place, live: live, reading: reading)
         }
         updatedAt = entries.compactMap { $0.live?.observedDate }.max()
+    }
+
+    private static func isFresh(_ live: LivePlace, now: Date) -> Bool {
+        guard let observed = live.observedDate else { return false }
+        return now.timeIntervalSince(observed) <= liveMaxAge
     }
 
     func count(of tier: SensoryTier) -> Int {

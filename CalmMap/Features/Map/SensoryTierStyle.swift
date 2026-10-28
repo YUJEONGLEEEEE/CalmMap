@@ -9,6 +9,14 @@ extension SensoryTier {
         }
     }
 
+    var soundTitle: String {
+        switch self {
+        case .calm: "조용한 편"
+        case .moderate: "보통 수준"
+        case .intense: "시끄러운 편"
+        }
+    }
+
     var foreground: Color {
         self == .calm ? Color.calmInk : Color.calmOnInk
     }
@@ -34,6 +42,7 @@ struct TierBadge: View {
 struct MeasuredSpotPin: View {
     let tier: SensoryTier
     var size: CGFloat = 22
+    var name = "내가 측정한 곳"
 
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: size * 0.32, style: .continuous)
@@ -46,6 +55,6 @@ struct MeasuredSpotPin: View {
                 .foregroundStyle(tier.foreground)
         }
         .frame(width: size, height: size)
-        .accessibilityLabel("내가 측정한 곳, \(tier.title)")
+        .accessibilityLabel("\(name), 소리가 \(tier.soundTitle)")
     }
 }
