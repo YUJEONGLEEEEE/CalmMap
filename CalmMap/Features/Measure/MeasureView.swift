@@ -336,6 +336,12 @@ struct MeasureView: View {
     }
 
     private func adoptRouterPlace() {
+        if meter.state == .measuring, router.measurePlace != nil || router.measureAtCurrentLocation {
+            router.measurePlace = nil
+            router.measureAtCurrentLocation = false
+            toasts.show("측정 중에는 장소를 바꿀 수 없어요.")
+            return
+        }
         if let pending = router.measurePlace {
             place = pending
             useCurrentLocation = false
