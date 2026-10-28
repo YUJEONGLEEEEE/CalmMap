@@ -3,6 +3,11 @@ import SwiftData
 import SwiftUI
 
 struct SensoryMapView: View {
+    private static let seoulRegion = MKCoordinateRegion(
+        center: CLLocationCoordinate2D(latitude: 37.5560, longitude: 126.9900),
+        span: MKCoordinateSpan(latitudeDelta: 0.12, longitudeDelta: 0.12)
+    )
+
     @Environment(SensoryMapModel.self) private var model
     @Environment(ToastCenter.self) private var toasts
     @Environment(AlertCenter.self) private var alerts
@@ -16,12 +21,8 @@ struct SensoryMapView: View {
     @State private var selectedSpot: MeasuredSpot?
     @State private var veilOpacity = 0.0
     @State private var locator = LocationProvider()
-    @State private var position: MapCameraPosition = .region(
-        MKCoordinateRegion(
-            center: CLLocationCoordinate2D(latitude: 37.5560, longitude: 126.9900),
-            span: MKCoordinateSpan(latitudeDelta: 0.12, longitudeDelta: 0.12)
-        )
-    )
+    @State private var isLocating = false
+    @State private var position: MapCameraPosition = .region(Self.seoulRegion)
 
     var body: some View {
         NavigationStack {
@@ -112,9 +113,22 @@ struct SensoryMapView: View {
                 }
             }
             .onChange(of: scenePhase) {
-                if scenePhase == .active, isStale {
+                guard scenePhase == .active else { return }
+                model.expireStaleData()
+                if isStale {
                     Task { await refresh(announce: false) }
                 }
+            }
+            .onChange(of: router.sheetDismissal) {
+                if router.selectedTab != .map {
+                    selected = nil
+                    selectedSpot = nil
+                }
+            }
+            .onChange(of: locator.location) {
+                guard isLocating, let current = locator.location else { return }
+                isLocating = false
+                checkOutsideSeoul(current)
             }
             .onChange(of: measurements.count) {
                 model.apply(measurements: measurements)
@@ -136,8 +150,22 @@ struct SensoryMapView: View {
         model.fetchedAt.map { Date().timeIntervalSince($0) > 600 } ?? true
     }
 
-    private var isShowingSheet: Bool {
-        selected != nil || selectedSpot != nil
+    private var canPresentAlert: Bool {
+        router.selectedTab == .map && selected == nil && selectedSpot == nil
+    }
+
+    private func move(to region: MKCoordinateRegion) {
+        withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.4)) {
+            position = .region(region)
+        }
+    }
+
+    private func checkOutsideSeoul(_ current: CLLocation) {
+        let nearest = model.places.map { $0.distance(from: current) }.min() ?? 0
+        guard nearest > 30_000 else { return }
+        toasts.show("서울 밖이에요 · 실시간 정보는 서울 121곳에서 볼 수 있어요", duration: .seconds(5), actionTitle: "서울로 이동") { [self] in
+            move(to: Self.seoulRegion)
+        }
     }
 
     @ViewBuilder
@@ -161,7 +189,7 @@ struct SensoryMapView: View {
                     ring
                 }
             }
-                .accessibilityLabel("\(entry.place.name), \(model.isLoading ? "불러오는 중" : "데이터 없음")")
+            .accessibilityLabel("\(entry.place.name), \(model.isLoading ? "불러오는 중" : "데이터 없음")")
         }
     }
 
@@ -279,8 +307,9 @@ struct SensoryMapView: View {
             }
             return
         }
+        isLocating = true
         locator.requestOnce()
-        withAnimation(.easeInOut(duration: 0.4)) {
+        withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.4)) {
             position = .userLocation(fallback: position)
         }
     }
@@ -305,9 +334,8 @@ struct SensoryMapView: View {
             }
         }
         if let coordinate {
-            withAnimation(.easeInOut(duration: 0.4)) {
-                position = .region(MKCoordinateRegion(center: coordinate, span: MKCoordinateSpan(latitudeDelta: 0.03, longitudeDelta: 0.03)))
-            }
+            let center = CLLocationCoordinate2D(latitude: coordinate.latitude - 0.008, longitude: coordinate.longitude)
+            move(to: MKCoordinateRegion(center: center, span: MKCoordinateSpan(latitudeDelta: 0.03, longitudeDelta: 0.03)))
         }
     }
 
@@ -333,7 +361,7 @@ struct SensoryMapView: View {
                 toasts.show("업데이트했어요 · \(updatedAt.seoulStampText) 기준", style: .success)
             }
         case .failed:
-            if hasSeenIntro, !isShowingSheet {
+            if hasSeenIntro, canPresentAlert {
                 presentLoadError()
             }
         case .skipped:
@@ -345,7 +373,7 @@ struct SensoryMapView: View {
         alerts.present(
             systemImage: "wifi.exclamationmark",
             title: "데이터를 불러오지 못했어요",
-            message: "인터넷 연결을 확인하고 다시 시도해 주세요.",
+            message: "인터넷 연결을 확인하거나 잠시 후 다시 시도해 주세요.",
             cancelTitle: "닫기",
             actionTitle: "다시 시도"
         ) {
@@ -375,7 +403,7 @@ struct SensoryMapView: View {
                 HStack(spacing: 8) {
                     ProgressView()
                         .controlSize(.small)
-                    Text("서울시 실시간 도시데이터 불러오는 중…")
+                    Text("서울시 실시간 도시데이터를 불러오는 중…")
                         .font(.footnote.weight(.medium))
                         .foregroundStyle(.secondary)
                 }

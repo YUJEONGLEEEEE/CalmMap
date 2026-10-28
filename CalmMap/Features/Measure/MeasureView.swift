@@ -42,6 +42,9 @@ struct MeasureView: View {
                             soundOnlyNote
                         }
                     }
+                    if meter.state == .denied {
+                        micDeniedNote
+                    }
                     switch meter.state {
                     case .idle, .failed, .denied:
                         startSection
@@ -62,6 +65,7 @@ struct MeasureView: View {
                     places: places.sorted(near: location.location),
                     location: location.location,
                     areaName: location.areaName,
+                    isLocationDenied: location.isDenied,
                     onPickCurrentLocation: {
                         place = nil
                         useCurrentLocation = true
@@ -92,24 +96,36 @@ struct MeasureView: View {
                 toasts.show(meter.interruptionMessage, style: .warning, duration: .seconds(4))
             }
             .onChange(of: meter.state) {
-                UIApplication.shared.isIdleTimerDisabled = meter.state == .measuring
-                if meter.state == .finished, router.selectedTab != .measure {
+                guard meter.state == .finished else { return }
+                if router.selectedTab != .measure {
                     toasts.show("측정이 끝났어요. 결과를 저장해 주세요.", style: .success, duration: .seconds(4.5), actionTitle: "결과 보기") { [router] in
-                        router.selectedTab = .measure
+                        router.showMeasureResult()
                     }
+                } else {
+                    AccessibilityNotification.Announcement("측정이 끝났어요. 결과를 확인하고 저장해 주세요.").post()
                 }
             }
+            .sensoryFeedback(.success, trigger: meter.state) { _, new in new == .finished }
             .onChange(of: scenePhase) {
                 if scenePhase == .background, meter.state == .measuring {
                     meter.cancel()
                     stoppedInBackground = true
                 } else if scenePhase == .active, stoppedInBackground {
                     stoppedInBackground = false
+                    location.requestOnce()
                     toasts.show("앱을 나가서 측정을 멈췄어요.\n다시 시작해 주세요.", style: .warning, duration: .seconds(4))
                 }
             }
             .onChange(of: location.location) {
+                if meter.state == .measuring {
+                    measuredLocation = location.location
+                }
                 autoSelectPlace()
+            }
+            .onChange(of: location.areaName) {
+                if meter.state == .measuring {
+                    measuredAreaName = location.areaName
+                }
             }
         }
     }
@@ -132,9 +148,11 @@ struct MeasureView: View {
                     Text("측정 장소").font(.caption).foregroundStyle(.secondary)
                     if useCurrentLocation {
                         Text("현재 위치").font(.headline)
-                        Label(currentLocationText, systemImage: location.isDenied ? "location.slash" : "location")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                        if !location.isDenied {
+                            Label(currentLocationText, systemImage: "location")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
                         if location.isApproximate, location.location != nil {
                             Label("대략적인 위치라 핀이 실제 위치와 다를 수 있어요", systemImage: "location.circle")
                                 .font(.caption)
@@ -288,6 +306,17 @@ struct MeasureView: View {
         .calmTintCard(padding: 12, cornerRadius: 16)
     }
 
+    private var micDeniedNote: some View {
+        Label {
+            Text("마이크 권한이 꺼져 있어 측정할 수 없어요. 설정에서 마이크를 허용해 주세요.")
+                .font(.footnote)
+        } icon: {
+            Image(systemName: "mic.slash")
+                .foregroundStyle(Color.calmInk)
+        }
+        .calmTintCard(padding: 12, cornerRadius: 16)
+    }
+
     private var soundOnlyText: String {
         guard let current = location.location else {
             return "현재 위치에서는 소리만 기록해요.\n서울 121곳 근처에서는 사람 붐빔까지 함께 계산해요."
@@ -311,6 +340,7 @@ struct MeasureView: View {
 
     private func startMeasuring() async {
         let wasAsked = AVAudioApplication.shared.recordPermission != .undetermined
+        location.requestOnce()
         await meter.start()
         if meter.state == .measuring {
             measuredLocation = location.location
@@ -330,7 +360,7 @@ struct MeasureView: View {
                 }
             }
         } else {
-            toasts.show("마이크 권한이 없어서 측정을 시작하지 않았어요.")
+            toasts.show("마이크 권한이 없어 측정할 수 없어요.")
         }
     }
 
@@ -552,6 +582,7 @@ struct PlacePickerView: View {
     let places: [Place]
     let location: CLLocation?
     let areaName: String?
+    let isLocationDenied: Bool
     let onPickCurrentLocation: () -> Void
     let onPick: (Place) -> Void
     @State private var query = ""
@@ -563,7 +594,25 @@ struct PlacePickerView: View {
     var body: some View {
         NavigationStack {
             List {
-                if location != nil, query.isEmpty {
+                if isLocationDenied, query.isEmpty {
+                    Section {
+                        HStack(spacing: 12) {
+                            Image(systemName: "location.slash")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                                .frame(width: 30, height: 30)
+                                .background(Color(.tertiarySystemFill), in: Circle())
+                            VStack(alignment: .leading) {
+                                Text("현재 위치에서 측정")
+                                    .foregroundStyle(.secondary)
+                                Text("위치 권한을 켜면 쓸 수 있어요")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        .accessibilityElement(children: .combine)
+                    }
+                } else if location != nil, query.isEmpty {
                     Section {
                         Button(action: onPickCurrentLocation) {
                             HStack(spacing: 12) {

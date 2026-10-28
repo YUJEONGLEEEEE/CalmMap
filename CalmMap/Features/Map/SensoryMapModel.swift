@@ -57,6 +57,7 @@ final class SensoryMapModel {
             return .skipped
         } catch {
             errorMessage = error.localizedDescription
+            rebuild()
             return .failed
         }
     }
@@ -77,6 +78,10 @@ final class SensoryMapModel {
 
     func spot(id: UUID) -> MeasuredSpot? {
         spots.first { $0.id == id }
+    }
+
+    func expireStaleData() {
+        rebuild()
     }
 
     func apply(profile: SensoryProfile) {

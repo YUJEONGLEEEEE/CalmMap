@@ -2,6 +2,7 @@ import AVFoundation
 import Foundation
 import Observation
 import SoundAnalysis
+import UIKit
 
 @Observable
 final class SoundMeter {
@@ -114,6 +115,7 @@ final class SoundMeter {
         self.observer = observer
         startedAt = Date()
         state = .measuring
+        UIApplication.shared.isIdleTimerDisabled = true
 
         interruptionObserver = NotificationCenter.default.addObserver(
             forName: AVAudioSession.interruptionNotification,
@@ -204,6 +206,7 @@ final class SoundMeter {
     }
 
     private func stopEngine() {
+        UIApplication.shared.isIdleTimerDisabled = false
         timer?.invalidate()
         timer = nil
         if let interruptionObserver {

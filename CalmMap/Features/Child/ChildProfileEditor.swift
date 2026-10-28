@@ -20,12 +20,14 @@ struct ChildProfileEditor: View {
     @State private var nameEdited = false
     private let initialDraft: Draft
     private let originalName: String
+    private let childID: UUID?
 
     init(child: ChildProfile?) {
         self.child = child
         let draft = Draft(child)
         initialDraft = draft
-        originalName = child?.name ?? ""
+        originalName = draft.name
+        childID = child?.id
         _name = State(initialValue: draft.name)
         _crowd = State(initialValue: draft.crowd)
         _loudness = State(initialValue: draft.loudness)
@@ -67,8 +69,8 @@ struct ChildProfileEditor: View {
 
         var normalized: Draft {
             var copy = self
-            copy.name = NicknameValidator.normalized(name)
-            copy.note = note.trimmingCharacters(in: .whitespacesAndNewlines)
+            copy.name = NicknameValidator.trimmed(name)
+            copy.note = NicknameValidator.trimmed(note)
             return copy
         }
     }
@@ -82,7 +84,9 @@ struct ChildProfileEditor: View {
     }
 
     private var otherNames: [String] {
-        profiles.filter { $0.id != child?.id }.map(\.name)
+        let keepsOwnName = childID != nil && NicknameValidator.visible(name) == NicknameValidator.visible(originalName)
+        guard !keepsOwnName else { return [] }
+        return profiles.filter { $0.id != childID }.map(\.name)
     }
 
     private var nameError: String? {
@@ -90,7 +94,7 @@ struct ChildProfileEditor: View {
     }
 
     private var trimmedName: String {
-        NicknameValidator.normalized(name)
+        NicknameValidator.trimmed(name)
     }
 
     var body: some View {
@@ -132,7 +136,7 @@ struct ChildProfileEditor: View {
                     sensitivityPicker("사람 붐빔", systemImage: "person.3", selection: $crowd)
                     sensitivityPicker("큰 소리", systemImage: "speaker.wave.3", selection: $loudness)
                 } header: {
-                    Text("얼마나 예민한가요")
+                    Text("얼마나 예민한가요?")
                 } footer: {
                     Text("예민할수록 같은 장소도 점수가 높게 나와요.")
                 }
@@ -150,7 +154,7 @@ struct ChildProfileEditor: View {
                 } header: {
                     Text("힘들어하는 소리")
                 } footer: {
-                    Text("소리 크기보다 종류가 더 중요할 때가 많아요.\n측정한 곳은 실제로 들린 소리로, 측정 전인 곳은 장소 유형으로 계산해요.")
+                    Text("소리 크기보다 종류가 더 중요할 때가 많아요.\n측정한 곳은 측정한 시간대 앞뒤로 실제로 들린 소리로, 그 밖에는 장소 유형으로 계산해요.")
                 }
 
                 Section {
@@ -163,7 +167,7 @@ struct ChildProfileEditor: View {
                 } header: {
                     Text("빛")
                 } footer: {
-                    Text("측정할 때 조명을 체크한 곳에 반영돼요.")
+                    Text("측정할 때 조명을 체크한 곳에만 반영돼요.")
                 }
 
                 Section {
@@ -193,11 +197,12 @@ struct ChildProfileEditor: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("저장") { save() }
-                        .disabled(trimmedName.isEmpty || nameError != nil)
+                        .disabled(NicknameValidator.visible(name).isEmpty || nameError != nil)
                 }
             }
         }
         .interactiveDismissDisabled(hasChanges)
+        .toastOverlay()
         .calmAlertOverlay()
         .environment(sheetAlerts)
     }
@@ -275,22 +280,26 @@ struct ChildProfileEditor: View {
     }
 
     private func delete() {
-        guard let child else { return }
-        let id = child.id.uuidString
-        let name = child.name
-        modelContext.delete(child)
-        do {
-            try modelContext.save()
-        } catch {
-            modelContext.rollback()
-            toasts.show("삭제하지 못했어요. 다시 시도해 주세요.", style: .warning)
-            return
-        }
+        guard let child, let childID else { return }
+        let id = childID.uuidString
+        let name = originalName
+        let context = modelContext
+        let toasts = toasts
         if activeChildID == id {
             activeChildID = ""
         }
-        toasts.show("\(name) 프로필을 삭제했어요.")
         dismiss()
+        Task {
+            try? await Task.sleep(for: .milliseconds(450))
+            context.delete(child)
+            do {
+                try context.save()
+                toasts.show("\(name) 프로필을 삭제했어요.")
+            } catch {
+                context.rollback()
+                toasts.show("삭제하지 못했어요. 다시 시도해 주세요.", style: .warning)
+            }
+        }
     }
 }
 

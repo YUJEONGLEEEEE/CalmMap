@@ -86,6 +86,9 @@ struct ChildHomeView: View {
                 PlaceDetailView(placeCode: entry.place.code)
                     .calmDetailSheet()
             }
+            .onChange(of: router.sheetDismissal) {
+                selectedPlace = nil
+            }
         }
     }
 
@@ -304,7 +307,7 @@ struct ChildHomeView: View {
         .padding(.vertical, 8)
         .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
-        .accessibilityValue(entry.reading.map { "\($0.tier.title), 감각부하 \(Int($0.score.rounded()))" } ?? "")
+        .accessibilityValue(entry.reading?.tier.title ?? "")
     }
 
     private func score(_ entry: SensoryMapModel.Entry) -> Double {

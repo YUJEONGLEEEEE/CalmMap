@@ -21,12 +21,20 @@ final class AppRouter {
         case spot(UUID)
     }
 
+    var sheetDismissal = 0
+
+    func showMeasureResult() {
+        sheetDismissal += 1
+        selectedTab = .measure
+    }
+
     func measure(at place: Place) {
         measurePlace = place
         selectedTab = .measure
     }
 
     func showOnMap(_ focus: MapFocus) {
+        sheetDismissal += 1
         mapFocus = focus
         selectedTab = .map
     }

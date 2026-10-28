@@ -5,6 +5,7 @@ import Observation
 final class LocationProvider: NSObject, CLLocationManagerDelegate {
     private(set) var location: CLLocation?
     private(set) var areaName: String?
+    private var areaLocation: CLLocation?
     private(set) var isDenied = false
     private(set) var isApproximate = false
     private(set) var didFail = false
@@ -18,6 +19,8 @@ final class LocationProvider: NSObject, CLLocationManagerDelegate {
         manager.desiredAccuracy = kCLLocationAccuracyHundredMeters
         isDenied = Self.isDenied(manager.authorizationStatus)
     }
+
+    private static let areaRadius: CLLocationDistance = 300
 
     private static func isDenied(_ status: CLAuthorizationStatus) -> Bool {
         status == .denied || status == .restricted
@@ -52,6 +55,10 @@ final class LocationProvider: NSObject, CLLocationManagerDelegate {
         Task { @MainActor in
             self.isApproximate = approximate
             self.didFail = false
+            if let latest, let areaLocation = self.areaLocation, latest.distance(from: areaLocation) > Self.areaRadius {
+                self.areaName = nil
+                self.areaLocation = nil
+            }
             self.location = latest
             self.resolveArea(of: latest)
         }
@@ -68,7 +75,10 @@ final class LocationProvider: NSObject, CLLocationManagerDelegate {
                 parts.append(part)
             }
             let name = parts.isEmpty ? nil : parts.joined(separator: " ")
-            Task { @MainActor in self.areaName = name }
+            Task { @MainActor in
+                self.areaName = name
+                self.areaLocation = location
+            }
         }
     }
 

@@ -87,11 +87,12 @@ enum PersonalAdjuster {
             total + (context.ratios[category] ?? 0) * profile.trigger(category).boost
         }
         let personalSound = min(sound * profile.loudness.multiplier * (1 + triggerLoad), 1)
-        let basis = context.ratiosMeasured ? "실측에서" : "이런 곳은 보통"
+        let basis = context.ratiosMeasured ? "직접 측정했을 때" : "이런 곳은 보통"
+        let verb = context.ratiosMeasured ? "자주 들렸어요" : "자주 들려요"
         for category in SoundCategory.triggerCandidates where profile.trigger(category) != .fine {
             let ratio = context.ratios[category] ?? 0
             if ratio >= noticeableRatio {
-                factors.append(PersonalFactor(symbolName: category.symbolName, text: "\(basis) \(category.title.particle("이", "가")) 자주 들려요 · \(profile.trigger(category).title)"))
+                factors.append(PersonalFactor(symbolName: category.symbolName, text: "\(basis) \(category.title.particle("이", "가")) \(verb) · \(profile.trigger(category).title)"))
             }
         }
         if profile.loudness == .high && sound >= 0.5 {

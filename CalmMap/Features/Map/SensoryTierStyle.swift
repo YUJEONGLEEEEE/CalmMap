@@ -12,7 +12,7 @@ extension SensoryTier {
     var soundTitle: String {
         switch self {
         case .calm: "조용한 편"
-        case .moderate: "보통"
+        case .moderate: "보통 수준"
         case .intense: "시끄러운 편"
         }
     }
@@ -55,6 +55,6 @@ struct MeasuredSpotPin: View {
                 .foregroundStyle(tier.foreground)
         }
         .frame(width: size, height: size)
-        .accessibilityLabel("\(name), 소리 \(tier.soundTitle)")
+        .accessibilityLabel("\(name), 소리가 \(tier.soundTitle)")
     }
 }

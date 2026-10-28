@@ -33,7 +33,7 @@ struct MeasuredSpotView: View {
                             Label("여기서 다시 측정하기", systemImage: "waveform")
                         }
                         .buttonStyle(.calmPrimary)
-                        Button("이 측정 기록 삭제", role: .destructive) {
+                        Button("이곳의 측정 기록 모두 삭제", role: .destructive) {
                             confirmDelete(count: spot.measurements.count)
                         }
                         .font(.subheadline)
@@ -71,8 +71,9 @@ struct MeasuredSpotView: View {
     private func summary(_ spot: MeasuredSpot) -> some View {
         HStack(spacing: 14) {
             MeasuredSpotPin(tier: spot.tier, size: 52)
+                .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 4) {
-                Text("측정 당시 소리 \(spot.tier.soundTitle)")
+                Text("측정 당시 소리가 \(spot.tier.soundTitle)")
                     .font(.title2.bold())
                 Text(spot.areaName ?? "현재 위치")
                     .font(.subheadline)
@@ -84,7 +85,7 @@ struct MeasuredSpotView: View {
 
     private var soundOnlyNote: some View {
         Label {
-            Text("실시간 붐빔 데이터가 없는 곳이라, 직접 측정한 소리로만 보여 드려요. 시간대별 예측은 서울 121곳에서만 볼 수 있어요.")
+            Text("내가 측정한 곳은 직접 측정한 소리로만 일반 기준 점수를 보여 드려요. 사람 붐빔과 시간대별 예측, 아이 맞춤 점수는 서울 121곳에서 볼 수 있어요.")
                 .font(.subheadline)
         } icon: {
             Image(systemName: "info.circle")
@@ -144,7 +145,7 @@ struct MeasuredSpotView: View {
                 }
                 .padding(.vertical, 8)
                 .accessibilityElement(children: .combine)
-                .accessibilityValue("소리 \(SensoryTier(score: score).soundTitle)")
+                .accessibilityValue("소리가 \(SensoryTier(score: score).soundTitle)")
                 if measurement.id != spot.measurements.last?.id {
                     Divider()
                 }
@@ -166,6 +167,7 @@ struct MeasuredSpotView: View {
             toasts.show("측정 기록을 삭제했어요.")
         } catch {
             modelContext.rollback()
+            model.apply(measurements: (try? modelContext.fetch(FetchDescriptor<SoundMeasurement>(sortBy: [SortDescriptor(\.measuredAt, order: .reverse)]))) ?? [])
             toasts.show("삭제하지 못했어요. 다시 시도해 주세요.", style: .warning)
         }
     }

@@ -24,6 +24,7 @@ final class ToastCenter {
 
     private(set) var current: Toast?
     private var dismissTask: Task<Void, Never>?
+    private var announceTask: Task<Void, Never>?
 
     func show(
         _ message: String,
@@ -35,8 +36,10 @@ final class ToastCenter {
         let toast = Toast(message: message, style: style, actionTitle: actionTitle, action: action)
         current = toast
         let spoken = actionTitle.map { "\(message). \($0) 버튼이 있어요." } ?? message
-        Task {
+        announceTask?.cancel()
+        announceTask = Task {
             try? await Task.sleep(for: .milliseconds(600))
+            guard !Task.isCancelled else { return }
             AccessibilityNotification.Announcement(spoken).post()
         }
         let visible = UIAccessibility.isVoiceOverRunning ? max(duration, .seconds(8)) : duration
@@ -50,6 +53,7 @@ final class ToastCenter {
 
     func dismiss() {
         dismissTask?.cancel()
+        announceTask?.cancel()
         current = nil
     }
 }
