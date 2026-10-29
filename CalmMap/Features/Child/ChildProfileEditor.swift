@@ -255,6 +255,10 @@ struct ChildProfileEditor: View {
     }
 
     private func save() {
+        if child != nil, !hasChanges {
+            dismiss()
+            return
+        }
         let target = child ?? ChildProfile(name: trimmedName)
         target.name = trimmedName
         target.crowd = crowd
@@ -276,7 +280,7 @@ struct ChildProfileEditor: View {
         if child == nil {
             activeChildID = target.id.uuidString
         }
-        toasts.show(child == nil ? "\(trimmedName) 맞춤 지도를 켰어요." : "\(trimmedName) 프로필을 저장했어요.", style: .success)
+        toasts.show(child == nil ? "\(trimmedName) 맞춤 지도를 켰어요." : "프로필을 수정했어요.", style: .success)
         dismiss()
     }
 
