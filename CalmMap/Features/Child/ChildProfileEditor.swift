@@ -188,6 +188,7 @@ struct ChildProfileEditor: View {
                 }
             }
             .scrollContentBackground(.hidden)
+            .scrollDismissesKeyboard(.interactively)
             .background(CalmBackdrop())
             .navigationTitle(child == nil ? "프로필 만들기" : "프로필 수정")
             .navigationBarTitleDisplayMode(.inline)
