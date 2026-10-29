@@ -93,6 +93,11 @@ struct ChildProfileEditor: View {
         NicknameValidator.message(for: name, existing: otherNames, edited: nameEdited)
     }
 
+    private var canSave: Bool {
+        guard !NicknameValidator.visible(name).isEmpty, nameError == nil else { return false }
+        return child == nil || hasChanges
+    }
+
     private var trimmedName: String {
         NicknameValidator.trimmed(name)
     }
@@ -198,7 +203,7 @@ struct ChildProfileEditor: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("저장") { save() }
-                        .disabled(NicknameValidator.visible(name).isEmpty || nameError != nil)
+                        .disabled(!canSave)
                 }
             }
         }
@@ -255,10 +260,7 @@ struct ChildProfileEditor: View {
     }
 
     private func save() {
-        if child != nil, !hasChanges {
-            dismiss()
-            return
-        }
+        guard canSave else { return }
         let target = child ?? ChildProfile(name: trimmedName)
         target.name = trimmedName
         target.crowd = crowd
