@@ -32,6 +32,9 @@ struct RootView: View {
         .onChange(of: activeProfile, initial: true) {
             model.apply(profile: activeProfile)
         }
+        .onAppear {
+            KeyboardDismissal.shared.install()
+        }
     }
 }
 
